@@ -1,0 +1,42 @@
+name: Agent ownership
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out trusted base commit only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Fetch changed-file manifest from GitHub metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          files = []
+          page = 1
+          while True:
+              url = f"https://api.github.com/repos/{os.environ['REPO']}/pulls/{os.environ['PR']}/files?per_page=100&page={page}"
+              request = urllib.request.Request(url, headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}", "Accept": "application/vnd.github+json"})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  batch = json.load(response)
+              files.extend({k: item.get(k) for k in ("filename", "previous_filename", "status")} for item in batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+          with open('/tmp/pr-files.json', 'w') as output:
+              json.dump(files, output)
+          PY
+      - name: Validate against trusted base policy
+        env:
+          ACTOR: ${{ github.event.pull_request.user.login }}
+        run: python scripts/check_agent_ownership.py --actor "$ACTOR" --changes /tmp/pr-files.json

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "github_identities": {},
+  "integration_maintainer": null,
+  "owners": {
+    "dhruva": {"component": "depth", "assignment": "confirmed", "paths": ["backend/depth/", "tests/depth/", ".agents/dhruva.md"]},
+    "harsh": {"component": null, "assignment": "unconfirmed", "paths": [".agents/harsh.md"]},
+    "rishi": {"component": null, "assignment": "unconfirmed", "paths": [".agents/rishi.md"]}
+  },
+  "restricted": ["AGENTS.md", ".agents/ownership.json", ".agents/shared-context.md", ".agents/decisions.md", ".github/", "docs/", "scripts/", "tests/ownership/", "pyproject.toml", "README.md", ".gitignore"]
+}

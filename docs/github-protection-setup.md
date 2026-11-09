@@ -1,0 +1,3 @@
+# GitHub protection setup
+
+No remote or verified GitHub usernames exist yet. Add trusted username mappings to `.agents/ownership.json` via reviewed integration change. Add CODEOWNERS entries only after usernames are verified. Configure a main-branch ruleset requiring pull requests, review, ownership status check, code-owner review for protected paths, and restricted direct pushes. Protect ownership configuration, validator, and workflow from ordinary agent changes. The workflow validates against base-branch policy and fails closed for unknown identities. Markdown and local checks alone do not enforce remote isolation.
