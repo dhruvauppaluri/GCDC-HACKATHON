@@ -2,7 +2,9 @@
 
 These JSON shapes are provisional and require workstream owner review before integration.
 
-Candidate profile: `{ "candidate_id": "string", "career_track": "hardware|software|business|product", "resume_text": "string", "projects": [], "skills": [], "preferences": {} }`.
+Candidate profile (website proposal): `{ "candidate_id": "string", "first_name": "string", "last_name": "string", "target_tracks": ["hardware|software|product"], "interests": "string", "resume_text": "string", "skills": {"hardware|software|product": {"skill name": 1}}, "projects": [{"source": "github|website", "url": "string", "summary": "string", "selected": true}], "links": {"linkedin_url": "string", "github_url": "string", "website_url": "string"} }`. Ratings range 1–5 and are candidate reported. Only selected projects feed downstream context. The UI labels hardware/software/product as HW/CS/PM. Existing Depth and Research track values remain valid; business is not shown in this three-track demo.
+
+Website API: `POST /api/auth/signup|login`, `POST /api/auth/logout`, `GET /api/me`, `PATCH /api/onboarding/name|interests|skills`, `POST /api/onboarding/resume|complete`, `GET /api/onboarding/options|suggest`, `PATCH /api/profile/links|projects`, `POST /api/profile/import`, `GET /api/profile/export`, and `GET /api/jobs/matches`. Session cookie is HTTP-only. The authenticated export returns full resume text and only selected project context with canonical track values. Research jobs can be provided as a JSON array through `RESEARCH_JOBS_FILE`; curated jobs remain available locally.
 
 Research output: `{ "job_id": "string", "track": "hardware|software|business|product", "title": "string", "company": "string", "required_skills": [], "preferred_skills": [], "eligibility_requirements": [], "source_url": "string", "retrieved_at": "ISO-8601 UTC" }`.
 

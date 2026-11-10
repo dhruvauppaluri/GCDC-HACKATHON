@@ -1,2 +1,9 @@
-# Pending verified GitHub usernames and integration maintainer.
-# Do not add unverified logical names as GitHub owners.
+# Dhruva's GitHub login was verified with gh auth status on 2026-11-10.
+/backend/depth/ @dhruvauppaluri
+/tests/depth/ @dhruvauppaluri
+/backend/web/ @dhruvauppaluri
+/tests/web/ @dhruvauppaluri
+/web/ @dhruvauppaluri
+/.agents/ @dhruvauppaluri
+/docs/ @dhruvauppaluri
+/.github/ @dhruvauppaluri

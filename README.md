@@ -14,4 +14,20 @@ To evaluate real evidence with your local ChatGPT sign-in and no API key, first 
 
 For a four-track mock demo, copy a synthetic `text` value from `backend/depth/fixtures.py` into the `project_text` form field, then submit its matching `answer` to question `Q1`. These examples are intentionally synthetic and have not been human reviewed. Arbitrary pasted claims remain unassessed in mock mode.
 
-Run `.venv/bin/pytest` for tests. No GitHub remote or branch protections are configured yet.
+Run `.venv/bin/pytest` for tests. The GitHub remote exists; branch protection has not been verified.
+
+## Candidate website demo
+
+The local candidate experience provides email/password accounts, resumable onboarding, profiles, and preliminary job matches. It stores accounts and extracted resume text in `.web-data/` (ignored by Git). Keep the service on your laptop for the demo.
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -e '.[test]'
+cd web && npm install && npm run build && cd ..
+.venv/bin/python scripts/seed_web_demo.py
+.venv/bin/uvicorn backend.web.api:app --host 127.0.0.1 --port 8010
+```
+
+Open `http://127.0.0.1:8010`. The seeded account is `demo@orbit.local` / `DemoPass123!`; new visitors can sign up with their own email. The seed command leaves an existing account untouched. To develop the frontend, run `cd web && npm run dev` in a second terminal and open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8010.
+
+For Research integration, set `RESEARCH_JOBS_FILE` to a JSON array matching the job shape in `docs/api-contracts.md` before starting the API. Curated roles stay available when no file is configured. Run `.venv/bin/pytest tests/web` and `cd web && npm run build` to verify the website.

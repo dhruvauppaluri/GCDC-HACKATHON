@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "github_identities": {},
-  "integration_maintainer": null,
+  "github_identities": {"dhruvauppaluri": "dhruva"},
+  "integration_maintainer": "dhruva",
   "owners": {
-    "dhruva": {"component": "depth", "assignment": "confirmed", "paths": ["backend/depth/", "tests/depth/", ".agents/dhruva.md"]},
+    "dhruva": {"component": "depth-and-integration", "assignment": "confirmed", "paths": ["backend/depth/", "tests/depth/", "backend/web/", "tests/web/", "web/", ".agents/dhruva.md"]},
     "harsh": {"component": null, "assignment": "unconfirmed", "paths": [".agents/harsh.md"]},
     "rishi": {"component": null, "assignment": "unconfirmed", "paths": [".agents/rishi.md"]},
     "venya": {"component": null, "assignment": "unconfirmed", "paths": [".agents/venya.md"]}
