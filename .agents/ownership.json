@@ -5,7 +5,8 @@
   "owners": {
     "dhruva": {"component": "depth", "assignment": "confirmed", "paths": ["backend/depth/", "tests/depth/", ".agents/dhruva.md"]},
     "harsh": {"component": null, "assignment": "unconfirmed", "paths": [".agents/harsh.md"]},
-    "rishi": {"component": null, "assignment": "unconfirmed", "paths": [".agents/rishi.md"]}
+    "rishi": {"component": null, "assignment": "unconfirmed", "paths": [".agents/rishi.md"]},
+    "venya": {"component": null, "assignment": "unconfirmed", "paths": [".agents/venya.md"]}
   },
   "restricted": ["AGENTS.md", ".agents/ownership.json", ".agents/shared-context.md", ".agents/decisions.md", ".github/", "docs/", "scripts/", "tests/ownership/", "pyproject.toml", "README.md", ".gitignore"]
 }
