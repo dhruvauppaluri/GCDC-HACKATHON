@@ -1,9 +1,11 @@
 from fastapi.testclient import TestClient
+import json
 import pytest
 
 from backend.web import api
 from backend.web.jobs import match_jobs, suggest_tracks
 from backend.web.storage import Store
+from scripts.seed_web_demo import FIXTURES, PASSWORD, main as seed_demo
 
 
 @pytest.fixture
@@ -88,3 +90,35 @@ def test_matching_does_not_claim_fit_probability():
     assert result["skill_gaps"] == ["analytics"]
     assert result["project_context"] == ["Research notes"]
     assert "fit_score" not in result
+
+
+def test_synthetic_user_resumes_and_idempotent_seed(tmp_path, monkeypatch):
+    fixtures = [json.loads(path.read_text()) for path in sorted(FIXTURES.glob("*.json"))]
+    assert len(fixtures) >= 12
+    assert len({item["email"] for item in fixtures}) == len(fixtures)
+    assert all(item["email"].endswith("@orbit.local") for item in fixtures)
+    assert {track for item in fixtures for track in item["profile"].get("target_tracks", [])} == {"HW", "CS", "PM"}
+    assert sum(not item["profile"]["completed"] for item in fixtures) >= 2
+    for item in fixtures:
+        profile = item["profile"]
+        if profile["completed"]:
+            assert len(profile["resume_text"]) >= 80
+            assert all(profile["skills"].get(track) for track in profile["target_tracks"])
+        assert all(1 <= level <= 5 for values in profile.get("skills", {}).values() for level in values.values())
+    monkeypatch.setenv("WEB_DATA_DIR", str(tmp_path))
+    seed_demo()
+    seed_demo()
+    store = Store(tmp_path / "app.sqlite3")
+    monkeypatch.setattr(api, "store", store)
+    with TestClient(api.app) as client:
+        for item in fixtures:
+            response = client.post("/api/auth/login", json={"email": item["email"], "password": PASSWORD})
+            assert response.status_code == 200
+            profile = client.get("/api/me").json()["profile"]
+            assert profile["completed"] == item["profile"]["completed"]
+            if profile["completed"]:
+                assert client.get("/api/jobs/matches").json()["jobs"]
+                assert client.get("/api/profile/export").json()["resume_text"] == item["profile"]["resume_text"]
+            else:
+                assert client.get("/api/jobs/matches").status_code == 409
+            client.post("/api/auth/logout")

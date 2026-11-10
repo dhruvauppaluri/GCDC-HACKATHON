@@ -1,0 +1,24 @@
+{
+  "email": "jordan.cs@orbit.local",
+  "scenario": "complete · backend software",
+  "profile": {
+    "first_name": "Jordan",
+    "last_name": "Lee",
+    "resume_name": "jordan-resume.txt",
+    "resume_text": "Education: B.S. Computer Science. Experience: Built Python APIs with SQL persistence and automated integration tests. Added a job queue to process uploads and wrote logs for failure diagnosis. Coursework: algorithms, databases, distributed systems. Seeking backend software internships.",
+    "interests": "backend engineering, APIs, databases, cloud services",
+    "target_tracks": [
+      "CS"
+    ],
+    "skills": {
+      "CS": {
+        "Python": 4,
+        "APIs": 4,
+        "SQL": 4,
+        "testing": 3,
+        "distributed systems": 2
+      }
+    },
+    "completed": true
+  }
+}

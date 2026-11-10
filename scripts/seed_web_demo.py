@@ -1,28 +1,29 @@
-"""Create one local demo account; safe to run more than once."""
+"""Create synthetic local demo accounts from JSON fixtures; safe to repeat."""
+import json
 import os
 from pathlib import Path
 
 from backend.web.storage import Store
 
+FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "web" / "fixtures" / "users"
+PASSWORD = "DemoPass123!"
+
 
 def main():
     store = Store(Path(os.getenv("WEB_DATA_DIR", ".web-data")) / "app.sqlite3")
-    email = "demo@orbit.local"
-    password = "DemoPass123!"
-    try:
-        user_id = store.create_user(email, password)
-    except ValueError:
-        print("Demo account already exists. Existing password was not changed.")
-        return
-    store.update_profile(user_id, {
-        "first_name": "Alex", "last_name": "Rivera", "resume_name": "alex-resume.txt",
-        "resume_text": "Built an FPGA image processing prototype in SystemVerilog, tested with Python, and developed a React portfolio.",
-        "interests": "FPGA design, embedded systems, and useful software tools",
-        "target_tracks": ["HW", "CS"],
-        "skills": {"HW": {"FPGA": 4, "SystemVerilog": 3, "Python": 4}, "CS": {"React": 3, "Python": 4}},
-        "completed": True,
-    })
-    print(f"Demo account: {email} / {password}")
+    created = skipped = 0
+    for path in sorted(FIXTURES.glob("*.json")):
+        fixture = json.loads(path.read_text())
+        email, profile = fixture["email"], fixture["profile"]
+        try:
+            user_id = store.create_user(email, PASSWORD)
+        except ValueError:
+            skipped += 1
+            continue
+        store.update_profile(user_id, profile)
+        created += 1
+    print(f"Sample accounts: {created} created, {skipped} already present. Password: {PASSWORD}")
+    print(f"Emails and scenarios: {FIXTURES}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+{
+  "email": "jamie.resume@orbit.local",
+  "scenario": "incomplete · resume step",
+  "profile": {
+    "first_name": "Jamie",
+    "last_name": "Park",
+    "completed": false
+  }
+}

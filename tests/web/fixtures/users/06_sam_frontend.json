@@ -1,0 +1,24 @@
+{
+  "email": "sam.cs@orbit.local",
+  "scenario": "complete · frontend software",
+  "profile": {
+    "first_name": "Sam",
+    "last_name": "Okafor",
+    "resume_name": "sam-resume.txt",
+    "resume_text": "Education: B.S. Computer Science. Experience: Built responsive React and TypeScript interfaces, improved keyboard navigation, and maintained a reusable component library. Used CSS and browser tests to fix mobile layout issues. Seeking frontend engineering roles.",
+    "interests": "frontend apps, design systems, accessible web experiences",
+    "target_tracks": [
+      "CS"
+    ],
+    "skills": {
+      "CS": {
+        "TypeScript": 4,
+        "React": 4,
+        "CSS": 4,
+        "accessibility": 3,
+        "testing": 3
+      }
+    },
+    "completed": true
+  }
+}

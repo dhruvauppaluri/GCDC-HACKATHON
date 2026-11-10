@@ -1,0 +1,24 @@
+{
+  "email": "maya.hw@orbit.local",
+  "scenario": "complete · FPGA/chip design",
+  "profile": {
+    "first_name": "Maya",
+    "last_name": "Chen",
+    "resume_name": "maya-resume.txt",
+    "resume_text": "Education: B.S. Computer Engineering. Experience: Designed a pipelined image filter on an FPGA using SystemVerilog. Built testbenches, compared simulation traces with expected outputs, and documented timing tradeoffs. Coursework: digital logic, computer architecture, VLSI fundamentals. Seeking FPGA or digital design internships.",
+    "interests": "FPGA, chip design, ASIC verification, digital logic",
+    "target_tracks": [
+      "HW"
+    ],
+    "skills": {
+      "HW": {
+        "FPGA": 5,
+        "SystemVerilog": 4,
+        "digital design": 4,
+        "simulation": 4,
+        "Python": 3
+      }
+    },
+    "completed": true
+  }
+}

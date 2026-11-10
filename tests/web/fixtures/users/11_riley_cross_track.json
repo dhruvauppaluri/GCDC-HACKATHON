@@ -1,0 +1,30 @@
+{
+  "email": "riley.mixed@orbit.local",
+  "scenario": "complete · software + product",
+  "profile": {
+    "first_name": "Riley",
+    "last_name": "Shah",
+    "resume_name": "riley-resume.txt",
+    "resume_text": "Education: B.S. Computer Science. Experience: Built a React prototype for a campus event tool, interviewed organizers, and used SQL to measure activation. Prioritized feature requests and shipped a small Python API. Seeking either software engineering or technical product roles.",
+    "interests": "building useful apps, user research, product decisions, web engineering",
+    "target_tracks": [
+      "CS",
+      "PM"
+    ],
+    "skills": {
+      "CS": {
+        "React": 4,
+        "Python": 3,
+        "APIs": 3,
+        "SQL": 3
+      },
+      "PM": {
+        "user research": 3,
+        "prioritization": 3,
+        "analytics": 3,
+        "SQL": 3
+      }
+    },
+    "completed": true
+  }
+}
