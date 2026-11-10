@@ -1,0 +1,24 @@
+{
+  "email": "priya.hw@orbit.local",
+  "scenario": "complete · PCB/electronics",
+  "profile": {
+    "first_name": "Priya",
+    "last_name": "Nair",
+    "resume_name": "priya-resume.txt",
+    "resume_text": "Education: B.S. Electrical Engineering. Experience: Designed two-layer and four-layer PCBs in Altium, produced schematics and bills of materials, assembled prototypes, and ran continuity and power tests. Worked with mechanical teammates on connector placement. Seeking electronics and PCB design roles.",
+    "interests": "PCB design, electronics, schematics, board bring-up",
+    "target_tracks": [
+      "HW"
+    ],
+    "skills": {
+      "HW": {
+        "PCB design": 4,
+        "electronics": 4,
+        "schematics": 4,
+        "Altium": 3,
+        "testing": 3
+      }
+    },
+    "completed": true
+  }
+}

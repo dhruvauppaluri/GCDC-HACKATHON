@@ -1,0 +1,24 @@
+{
+  "email": "noah.hw@orbit.local",
+  "scenario": "complete · embedded systems",
+  "profile": {
+    "first_name": "Noah",
+    "last_name": "Patel",
+    "resume_name": "noah-resume.txt",
+    "resume_text": "Education: B.S. Electrical Engineering. Experience: Wrote C firmware for a sensor logger, brought up I2C peripherals, and used Python scripts to inspect test data. Built a prototype board and diagnosed power noise with an oscilloscope. Seeking embedded systems roles.",
+    "interests": "embedded systems, microcontrollers, firmware, electronics",
+    "target_tracks": [
+      "HW"
+    ],
+    "skills": {
+      "HW": {
+        "C": 4,
+        "embedded systems": 4,
+        "electronics": 3,
+        "Python": 3,
+        "testing": 4
+      }
+    },
+    "completed": true
+  }
+}

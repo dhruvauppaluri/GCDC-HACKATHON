@@ -1,0 +1,24 @@
+{
+  "email": "taylor.pm@orbit.local",
+  "scenario": "complete · associate product management",
+  "profile": {
+    "first_name": "Taylor",
+    "last_name": "Brooks",
+    "resume_name": "taylor-resume.txt",
+    "resume_text": "Education: B.A. Economics. Experience: Interviewed student users, synthesized pain points, wrote a product brief, and prioritized a small roadmap. Built a dashboard of adoption metrics in SQL. Seeking associate product manager roles.",
+    "interests": "user research, product strategy, prioritization, analytics",
+    "target_tracks": [
+      "PM"
+    ],
+    "skills": {
+      "PM": {
+        "user research": 4,
+        "prioritization": 4,
+        "analytics": 3,
+        "SQL": 3,
+        "roadmapping": 3
+      }
+    },
+    "completed": true
+  }
+}

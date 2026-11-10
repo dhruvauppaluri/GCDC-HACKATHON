@@ -1,0 +1,24 @@
+{
+  "email": "casey.pm@orbit.local",
+  "scenario": "complete · product operations",
+  "profile": {
+    "first_name": "Casey",
+    "last_name": "Nguyen",
+    "resume_name": "casey-resume.txt",
+    "resume_text": "Education: B.S. Business Analytics. Experience: Set up experiment tracking, created weekly metrics reports, and coordinated launch checklists across product and support teams. Conducted customer interviews to find workflow friction. Seeking product operations roles.",
+    "interests": "product operations, metrics, experiments, stakeholder coordination",
+    "target_tracks": [
+      "PM"
+    ],
+    "skills": {
+      "PM": {
+        "metrics": 4,
+        "experimentation": 3,
+        "stakeholder management": 4,
+        "user research": 3,
+        "SQL": 3
+      }
+    },
+    "completed": true
+  }
+}

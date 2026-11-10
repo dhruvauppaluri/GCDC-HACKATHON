@@ -1,0 +1,28 @@
+{
+  "email": "demo@orbit.local",
+  "scenario": "complete · hardware + software",
+  "profile": {
+    "first_name": "Alex",
+    "last_name": "Rivera",
+    "resume_name": "alex-resume.txt",
+    "resume_text": "Education: B.S. Electrical and Computer Engineering. Experience: Built an FPGA image-processing prototype in SystemVerilog, wrote simulation tests, and used Python to inspect output frames. Projects: Developed a React portfolio and documented design tradeoffs. Seeking FPGA and software engineering internships.",
+    "interests": "FPGA design, embedded systems, and useful software tools",
+    "target_tracks": [
+      "HW",
+      "CS"
+    ],
+    "skills": {
+      "HW": {
+        "FPGA": 4,
+        "SystemVerilog": 3,
+        "simulation": 3,
+        "Python": 4
+      },
+      "CS": {
+        "React": 3,
+        "Python": 4
+      }
+    },
+    "completed": true
+  }
+}

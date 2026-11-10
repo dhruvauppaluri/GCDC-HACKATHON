@@ -1,0 +1,20 @@
+{
+  "email": "devon.skills@orbit.local",
+  "scenario": "incomplete · skills step",
+  "profile": {
+    "first_name": "Devon",
+    "last_name": "Bell",
+    "resume_name": "devon-resume.txt",
+    "resume_text": "Education: B.S. Computer Engineering. Experience: Built an embedded sensor prototype and a Python monitoring dashboard. Seeking roles that combine hardware and software.",
+    "interests": "embedded devices, Python tools, practical engineering",
+    "target_tracks": [
+      "HW",
+      "CS"
+    ],
+    "skills": {
+      "HW": {},
+      "CS": {}
+    },
+    "completed": false
+  }
+}

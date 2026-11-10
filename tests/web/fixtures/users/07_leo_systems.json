@@ -1,0 +1,24 @@
+{
+  "email": "leo.cs@orbit.local",
+  "scenario": "complete · systems software",
+  "profile": {
+    "first_name": "Leo",
+    "last_name": "Martinez",
+    "resume_name": "leo-resume.txt",
+    "resume_text": "Education: B.S. Computer Science. Experience: Implemented a C++ cache simulator and profiled memory access patterns on Linux. Wrote benchmark scripts in Python and explained algorithmic complexity in design notes. Seeking systems software internships.",
+    "interests": "systems programming, Linux, performance, algorithms",
+    "target_tracks": [
+      "CS"
+    ],
+    "skills": {
+      "CS": {
+        "C++": 4,
+        "Linux": 4,
+        "algorithms": 4,
+        "Python": 3,
+        "testing": 2
+      }
+    },
+    "completed": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "email": "morgan.pm@orbit.local",
+  "scenario": "complete · technical product",
+  "profile": {
+    "first_name": "Morgan",
+    "last_name": "Diaz",
+    "resume_name": "morgan-resume.txt",
+    "resume_text": "Education: B.S. Information Systems. Experience: Wrote requirements for an internal API, aligned engineers and customer support on scope, and tracked onboarding funnel metrics. Facilitated release planning and explained technical tradeoffs to nontechnical partners. Seeking technical product roles.",
+    "interests": "technical product strategy, APIs, analytics, cross-functional work",
+    "target_tracks": [
+      "PM"
+    ],
+    "skills": {
+      "PM": {
+        "product strategy": 4,
+        "technical communication": 4,
+        "APIs": 3,
+        "analytics": 3,
+        "stakeholder management": 4
+      }
+    },
+    "completed": true
+  }
+}

@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .env
+.web-data/
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo

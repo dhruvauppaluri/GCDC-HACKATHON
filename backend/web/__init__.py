@@ -1,0 +1,1 @@
+"""Candidate onboarding web application."""
