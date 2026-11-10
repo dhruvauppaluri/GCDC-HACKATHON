@@ -8,6 +8,7 @@ from pypdf import PdfWriter
 import pytest
 
 from backend.depth import evaluation
+from backend.depth import codex_adapter
 from backend.depth.api import app
 from backend.depth.fixtures import SCENARIOS
 from backend.depth import ingestion
@@ -125,6 +126,38 @@ def test_live_adapter_uses_configured_model(monkeypatch):
         return Response()
     monkeypatch.setattr(evaluation.httpx, "post", fake_post)
     assert evaluation.llm_json("Assess", {"track": "software"}) == {"ok": True}
+
+
+def test_codex_mode_uses_cli_and_preserves_answer_provenance(monkeypatch):
+    evidence = make_evidence([{"source_type": "claim", "location": "project_text", "text": "I built a queue for API jobs."}])
+    calls = []
+    def fake_codex(system, content, **kwargs):
+        calls.append(kwargs)
+        if kwargs.get("answer_only"):
+            return {"dimensions": {"conceptual": {"score": 3, "evidence_ids": [content["answers"][0]["id"]]}, "systems": None, "tradeoffs": None}}
+        return {"project_summary": "Candidate claims an API queue.", "summary_evidence_ids": ["E1"], "architecture_summary": "Unverified", "architecture_evidence_ids": [], "dimensions": {name: None for name in evaluation.DIMENSIONS}, "demonstrated_skills": [], "unverified_skills": ["queue design"], "follow_up_questions": [{"id": "Q1", "question": "Why a queue?"}]}
+    monkeypatch.setattr(evaluation, "codex_json", fake_codex)
+    initial = evaluation.initial_assessment("p", "software", None, None, evidence, [], "codex")
+    assert initial["evaluation_mode"] == "codex"
+    assert initial["depth_score"] is None
+    assert any("self-reported" in text for text in initial["limitations"])
+    revised = evaluation.revise_assessment(initial, [{"question_id": "Q1", "answer": "It absorbs bursts while the worker processes jobs."}])
+    assert revised["depth_score"] == 7.5
+    assert revised["dimensions"]["conceptual"]["evidence_ids"] == ["E2"]
+    assert calls == [{}, {"answer_only": True}]
+
+
+def test_codex_cli_runs_ephemeral_read_only(monkeypatch):
+    monkeypatch.setattr(codex_adapter.shutil, "which", lambda _: "/usr/local/bin/codex")
+    def fake_run(command, **kwargs):
+        assert "--ephemeral" in command
+        assert command[command.index("--sandbox") + 1] == "read-only"
+        assert "--output-schema" in command
+        from pathlib import Path
+        Path(command[command.index("--output-last-message") + 1]).write_text('{"dimensions": {"conceptual": null, "systems": null, "tradeoffs": null}}')
+        return type("Result", (), {"returncode": 0})()
+    monkeypatch.setattr(codex_adapter.subprocess, "run", fake_run)
+    assert "dimensions" in codex_adapter.codex_json("Assess", {"answers": []}, answer_only=True)
 
 
 def wait_for(client, job_id):

@@ -89,7 +89,7 @@ async def create_evaluation(
     mode: str = Form("mock"),
     files: list[UploadFile] | None = File(None),
 ):
-    if career_track not in {"hardware", "software", "business", "product"} or mode not in {"mock", "live"}:
+    if career_track not in {"hardware", "software", "business", "product"} or mode not in {"mock", "live", "codex"}:
         raise HTTPException(422, "Invalid track or mode")
     if not project_id.strip() or len(project_id) > 120:
         raise HTTPException(422, "Invalid project_id")
