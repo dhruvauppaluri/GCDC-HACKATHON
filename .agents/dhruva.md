@@ -5,15 +5,15 @@
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
 - Current task: Interactive onboarding, candidate profile, and synthetic demo users
-- Status: implementation and local verification complete on `agent/dhruva/onboarding`; PR #1 integration pending
+- Status: onboarding and 13 synthetic user/resume fixtures merged to `main` in PR #1; local verification complete
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
-- Work in progress: peer review of candidate contract, calibration and integration
+- Work in progress: peer review of candidate contract, calibration and Research/Judge integration
 - Next steps: obtain Venya's GitHub username and workstream from her, human-review calibration examples, confirm shared contract, integrate with Judge
 - Expected inputs: one project, career track, public GitHub URL and/or written evidence, optional candidate answers
 - Expected outputs: cited project-depth assessment, questions, versioned revisions
 - Interfaces exposed: draft Depth HTTP API in `docs/api-contracts.md`
 - Dependencies: approved shared contract; local Codex CLI sign-in for `mode=codex` or an API credential for `mode=live`
-- Blockers: base-branch ownership policy needs a reviewed bootstrap update; peer identities and Venya's repo invitation remain pending
+- Blockers: peer identities and Venya's repo invitation remain pending; private-repo branch protection requires a plan upgrade or a different enforcement setup
 - Files modified: `backend/web/`, `tests/web/`, `web/`, own status file; shared ownership, contracts, README, and local demo script on feature branch
-- Latest relevant commit or PR: PR #1 (`agent/dhruva/onboarding`)
-- Last updated: 2026-11-10T09:28:33Z
+- Latest relevant commit or PR: PR #1 merged as `9df9113`
+- Last updated: 2026-11-10T09:30:51Z
