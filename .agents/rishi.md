@@ -28,3 +28,10 @@
 - Dataset commit: `22338c6d83b89149237775c3fdd0eea33cf41167`.
 - Extractor commit: `caf6af93d6371979571d2c7beb5cc5eb1e3d8929`. Run `python3 data/fixtures/rishi/swe_paralegal.py --applicant google-01` from the repo root.
 - Last updated: 2026-11-13T05:21:51.533Z
+
+## Lawyer citation verification experiment
+
+- Standalone prototype: `data/fixtures/rishi/lawyers_grounded.py` in commit `1377330fb7990033687765dcf4be7fe9e885aee8`.
+- Verified locally: preview and nine controlled cases with simulated verifier responses. Live Ollama accuracy and latency remain unmeasured.
+- Integration dependency: Harsh and Dhruva review the verifier before adopting it in the shared pipeline.
+- Last updated: 2026-11-13T06:59:49.689Z
