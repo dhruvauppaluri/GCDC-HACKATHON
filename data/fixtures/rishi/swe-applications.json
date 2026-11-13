@@ -1,0 +1,1028 @@
+{
+  "synthetic": true,
+  "description": "Fictional SWE internship applications and outcomes for demo testing. The Google pool emphasizes algorithms and systems depth. The Walmart pool emphasizes retail applications and practical delivery.",
+  "applications": [
+    {
+      "id": "google-01",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 2.80/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Software Engineering",
+        "projects": [
+          "Built a Java campus shuttle planner using breadth-first search and tested disconnected stops."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-02",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.08/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Computer Networks",
+        "projects": [
+          "Wrote a Python log parser with a hash map to group errors and tested malformed records with pytest."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-03",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.19/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Operating Systems",
+        "projects": [
+          "Built a C++ maze solver using depth-first search and compared its memory use with breadth-first search."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-04",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 2.94/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Human-Computer Interaction",
+        "projects": [
+          "Implemented a Java autocomplete trie and tested empty prefixes and duplicate words."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-05",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 3.22/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Web Development",
+        "projects": [
+          "Built a Python study scheduler with a priority queue and tested deadlines that fall on the same day."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-06",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.16/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Applied Machine Learning",
+        "projects": [
+          "Wrote a C++ image filter with bounds checks and used unit tests to verify edge pixels."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-07",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 2.98/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Computer Organization",
+        "projects": [
+          "Built a Java seat allocator and used a hash map to prevent duplicate bookings."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-08",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.27/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Data Structures",
+        "projects": [
+          "Implemented a Python command-line file deduplicator using hashing and tested empty files and repeated names."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-09",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.09/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Algorithms",
+        "projects": [
+          "Built a C++ route planner with Dijkstra's algorithm and tested unreachable destinations."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-10",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.25/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Databases",
+        "projects": [
+          "Wrote a Java calendar tool that sorts intervals and tested overlapping events."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-11",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.42/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Computer Networks",
+        "projects": [
+          "Built a Python FastAPI campus equipment API with PostgreSQL and integration tests for concurrent reservations."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-12",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.53/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Operating Systems",
+        "projects": [
+          "Implemented a C++ parallel image processor and benchmarked a thread pool against sequential execution."
+        ],
+        "prior_experience": "At a fictional retailer, built a SQL report and reviewed data quality with store operations staff."
+      }
+    },
+    {
+      "id": "google-13",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.61/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Human-Computer Interaction",
+        "projects": [
+          "Built a Java search index with an inverted index and benchmarked query latency as the corpus grew."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-14",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.39/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Web Development",
+        "projects": [
+          "Built a Python scheduler that topologically sorts task dependencies and uses pytest to catch cycles."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-15",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 3.56/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Applied Machine Learning",
+        "projects": [
+          "Implemented a Java key-value store with a write-ahead log and tested recovery after interrupted writes."
+        ],
+        "prior_experience": "At a fictional software startup, wrote Python integration tests for a REST API."
+      }
+    },
+    {
+      "id": "google-16",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.68/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Computer Organization",
+        "projects": [
+          "Built a Go job queue with bounded retries and integration tests for duplicate delivery."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-17",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.49/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Data Structures",
+        "projects": [
+          "Developed a TypeScript accessibility scanner and added regression tests for keyboard focus."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-18",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.59/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Algorithms",
+        "projects": [
+          "Built a Python document-ranking service and compared two retrieval algorithms on a labeled query set."
+        ],
+        "prior_experience": "At a fictional SaaS company, fixed TypeScript UI bugs and reviewed pull requests."
+      }
+    },
+    {
+      "id": "google-19",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.45/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Databases",
+        "projects": [
+          "Implemented a C++ memory allocator and used sanitizers and benchmarks to check fragmentation."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-20",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.71/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Software Engineering",
+        "projects": [
+          "Built a Java course planner using graph traversal and deployed a demo with Docker."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-21",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.88/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Operating Systems",
+        "projects": [
+          "Implemented a Go replicated key-value store and tested leader failover and log recovery under network partitions."
+        ],
+        "prior_experience": "At a fictional retailer, built a SQL report and reviewed data quality with store operations staff."
+      }
+    },
+    {
+      "id": "google-22",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.91/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Human-Computer Interaction",
+        "projects": [
+          "Built a C++ concurrent cache and benchmarked lock contention and tail latency under mixed workloads."
+        ],
+        "prior_experience": "At a fictional SaaS company, fixed TypeScript UI bugs and reviewed pull requests."
+      }
+    },
+    {
+      "id": "google-23",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.77/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Web Development",
+        "projects": [
+          "Built a Java stream processor with checkpointing and tested recovery from duplicate and out-of-order events."
+        ],
+        "prior_experience": "In a university research group, benchmarked a C++ indexing tool and documented reproducibility."
+      }
+    },
+    {
+      "id": "google-24",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.97/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Applied Machine Learning",
+        "projects": [
+          "Developed a Python search engine with an inverted index and benchmarked query latency and recall."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "google-25",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 3.84/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Computer Organization",
+        "projects": [
+          "Implemented a Rust task executor with work stealing and benchmarked throughput under uneven workloads."
+        ],
+        "prior_experience": "As a university lab assistant, helped students debug Java programs and explain data structures."
+      }
+    },
+    {
+      "id": "google-26",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.76/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Data Structures",
+        "projects": [
+          "Built a Go distributed build cache with content hashing and integration tests for partial uploads."
+        ],
+        "prior_experience": "At a fictional retailer, built a SQL report and reviewed data quality with store operations staff."
+      }
+    },
+    {
+      "id": "google-27",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.93/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Algorithms",
+        "projects": [
+          "Built a C++ static analyzer using control-flow graphs and added regression tests for false positives."
+        ],
+        "prior_experience": "At a fictional SaaS company, fixed TypeScript UI bugs and reviewed pull requests."
+      }
+    },
+    {
+      "id": "google-28",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.81/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Databases",
+        "projects": [
+          "Implemented a Java feature flag service with versioned rules, a REST API, and load tests."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "google-29",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.89/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Software Engineering",
+        "projects": [
+          "Built a TypeScript trace viewer that aggregates events and benchmarked rendering on large trace files."
+        ],
+        "prior_experience": "At a fictional software startup, wrote Python integration tests for a REST API."
+      }
+    },
+    {
+      "id": "google-30",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.95/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Computer Networks",
+        "projects": [
+          "Developed a Python model-serving API with batching and measured p95 latency under concurrent traffic."
+        ],
+        "prior_experience": "As a university lab assistant, helped students debug Java programs and explain data structures."
+      }
+    },
+    {
+      "id": "walmart-01",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 2.75/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Software Engineering",
+        "projects": [
+          "Built a React pantry checklist and tested adding and removing products with React Testing Library."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-02",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 2.92/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Computer Networks",
+        "projects": [
+          "Wrote a Python sales CSV cleaner and tested handling of invalid prices with pytest."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-03",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.06/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Operating Systems",
+        "projects": [
+          "Built a Node.js REST API for tracking campus club supplies and tested requests with missing fields."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-04",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.17/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Human-Computer Interaction",
+        "projects": [
+          "Built a Java inventory CLI with SQL queries for products below a reorder point."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-05",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 2.87/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Web Development",
+        "projects": [
+          "Built a React grocery price tracker and handled loading and failed requests."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-06",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.12/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Applied Machine Learning",
+        "projects": [
+          "Wrote a Python order summary tool and used unit tests to verify returns and discount calculations."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-07",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.20/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Computer Organization",
+        "projects": [
+          "Created a JavaScript product filter and tested empty results and keyboard navigation."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-08",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 2.99/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Data Structures",
+        "projects": [
+          "Built a Java shopping list application and tested quantity updates and duplicate items."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-09",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.26/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Algorithms",
+        "projects": [
+          "Built a Python demand forecast with a moving-average baseline and measured error on held-out weeks."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-10",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.15/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Databases",
+        "projects": [
+          "Wrote a Python SKU lookup tool with a hash map and checked missing items and duplicate codes."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-11",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.29/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Computer Networks",
+        "projects": [
+          "Built a Java Spring Boot inventory API backed by PostgreSQL and tested duplicate SKU submissions."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-12",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.53/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Operating Systems",
+        "projects": [
+          "Built a React order-status dashboard with a Node.js backend and handled delayed API responses."
+        ],
+        "prior_experience": "At a fictional software startup, wrote Python integration tests for a REST API."
+      }
+    },
+    {
+      "id": "walmart-13",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.35/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Human-Computer Interaction",
+        "projects": [
+          "Built a Python demand forecast using scikit-learn and compared error against a seasonal baseline."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-14",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.62/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Web Development",
+        "projects": [
+          "Implemented a Java Spring Boot returns service with integration tests for repeated refund requests."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-15",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 3.43/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Applied Machine Learning",
+        "projects": [
+          "Built a TypeScript product search page and tested debounced queries and empty results."
+        ],
+        "prior_experience": "At a fictional SaaS company, fixed TypeScript UI bugs and reviewed pull requests."
+      }
+    },
+    {
+      "id": "walmart-16",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.51/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Computer Organization",
+        "projects": [
+          "Wrote a Python inventory reconciliation job and used SQL to flag mismatches between shipments and receipts."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-17",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.36/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Data Structures",
+        "projects": [
+          "Built a Node.js catalog API with SQL pagination and packaged the service with Docker."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-18",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.48/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Algorithms",
+        "projects": [
+          "Developed a React fulfillment dashboard and wrote tests for partial shipments."
+        ],
+        "prior_experience": "As a university lab assistant, helped students debug Java programs and explain data structures."
+      }
+    },
+    {
+      "id": "walmart-19",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.57/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Databases",
+        "projects": [
+          "Built a Java promotion engine and added unit tests for overlapping discount rules."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-20",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.66/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Software Engineering",
+        "projects": [
+          "Built a Python delivery-delay classifier and evaluated precision and recall on a time-based split."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-21",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.76/4.00.",
+        "coursework": "Programming Fundamentals, Data Structures, Operating Systems",
+        "projects": [
+          "Designed a Java Spring Boot order API with idempotency keys, PostgreSQL transactions, and concurrent checkout tests."
+        ],
+        "prior_experience": "At a fictional software startup, wrote Python integration tests for a REST API."
+      }
+    },
+    {
+      "id": "walmart-22",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.86/4.00.",
+        "coursework": "Programming Fundamentals, Algorithms, Human-Computer Interaction",
+        "projects": [
+          "Built a React and TypeScript inventory console with accessibility tests and monitored API errors in a staging deployment."
+        ],
+        "prior_experience": "As a university lab assistant, helped students debug Java programs and explain data structures."
+      }
+    },
+    {
+      "id": "walmart-23",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.73/4.00.",
+        "coursework": "Programming Fundamentals, Databases, Web Development",
+        "projects": [
+          "Implemented a Go fulfillment event consumer with retry handling, deduplication, and integration tests."
+        ],
+        "prior_experience": "At a fictional retailer, built a SQL report and reviewed data quality with store operations staff."
+      }
+    },
+    {
+      "id": "walmart-24",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.90/4.00.",
+        "coursework": "Programming Fundamentals, Software Engineering, Applied Machine Learning",
+        "projects": [
+          "Developed a Python replenishment model with scikit-learn and backtested it against a seasonal baseline."
+        ],
+        "prior_experience": "No prior internships. Volunteered as a campus coding tutor."
+      }
+    },
+    {
+      "id": "walmart-25",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: December 2027. GPA: 3.70/4.00.",
+        "coursework": "Programming Fundamentals, Computer Networks, Computer Organization",
+        "projects": [
+          "Built a Node.js catalog service with Redis caching and benchmarked p95 read latency under load."
+        ],
+        "prior_experience": "In a university research group, benchmarked a C++ indexing tool and documented reproducibility."
+      }
+    },
+    {
+      "id": "walmart-26",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: May 2028. GPA: 3.84/4.00.",
+        "coursework": "Programming Fundamentals, Operating Systems, Data Structures",
+        "projects": [
+          "Designed a Java Spring Boot order allocation service and tested concurrent reservations and rollback."
+        ],
+        "prior_experience": "At a fictional software startup, wrote Python integration tests for a REST API."
+      }
+    },
+    {
+      "id": "walmart-27",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 3.95/4.00.",
+        "coursework": "Programming Fundamentals, Human-Computer Interaction, Algorithms",
+        "projects": [
+          "Built a React returns dashboard with contract tests for its API and error monitoring."
+        ],
+        "prior_experience": "As a university lab assistant, helped students debug Java programs and explain data structures."
+      }
+    },
+    {
+      "id": "walmart-28",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Engineering. Expected graduation: May 2028. GPA: 3.80/4.00.",
+        "coursework": "Programming Fundamentals, Web Development, Databases",
+        "projects": [
+          "Developed a Python ranking service for product search and evaluated ranking quality against a popularity baseline."
+        ],
+        "prior_experience": "No prior internships."
+      }
+    },
+    {
+      "id": "walmart-29",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Software Engineering. Expected graduation: December 2027. GPA: 3.78/4.00.",
+        "coursework": "Programming Fundamentals, Applied Machine Learning, Software Engineering",
+        "projects": [
+          "Built a TypeScript checkout API with payment retries, integration tests, and Docker deployment."
+        ],
+        "prior_experience": "At a fictional SaaS company, fixed TypeScript UI bugs and reviewed pull requests."
+      }
+    },
+    {
+      "id": "walmart-30",
+      "company": "Walmart",
+      "role": "Software Engineer Intern, Global Tech",
+      "application": {
+        "education": "B.S. in Computer Science. Expected graduation: May 2028. GPA: 3.89/4.00.",
+        "coursework": "Programming Fundamentals, Computer Organization, Computer Networks",
+        "projects": [
+          "Implemented a Java warehouse event pipeline and measured throughput and data loss during simulated outages."
+        ],
+        "prior_experience": "In a university research group, benchmarked a C++ indexing tool and documented reproducibility."
+      }
+    }
+  ],
+  "demo_labels": {
+    "google-01": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-02": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-03": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-04": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-05": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-06": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-07": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-08": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-09": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-10": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "google-11": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "google-12": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-13": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-14": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-15": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "google-16": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-17": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-18": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-19": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "google-20": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "google-21": {
+      "tier": "high",
+      "outcome": "no_offer"
+    },
+    "google-22": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-23": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-24": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-25": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-26": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-27": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-28": {
+      "tier": "high",
+      "outcome": "no_offer"
+    },
+    "google-29": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "google-30": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-01": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-02": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-03": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-04": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-05": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-06": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-07": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-08": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-09": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-10": {
+      "tier": "low",
+      "outcome": "internship_offer"
+    },
+    "walmart-11": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "walmart-12": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-13": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-14": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-15": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "walmart-16": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-17": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-18": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-19": {
+      "tier": "mid",
+      "outcome": "no_offer"
+    },
+    "walmart-20": {
+      "tier": "mid",
+      "outcome": "internship_offer"
+    },
+    "walmart-21": {
+      "tier": "high",
+      "outcome": "no_offer"
+    },
+    "walmart-22": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-23": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-24": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-25": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-26": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-27": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-28": {
+      "tier": "high",
+      "outcome": "no_offer"
+    },
+    "walmart-29": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    },
+    "walmart-30": {
+      "tier": "high",
+      "outcome": "internship_offer"
+    }
+  }
+}
