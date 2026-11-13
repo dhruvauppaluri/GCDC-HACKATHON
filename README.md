@@ -12,6 +12,17 @@ Open `/docs` for the API. Mock mode runs offline and labels its outputs. For liv
 
 To evaluate real evidence with your local ChatGPT sign-in and no API key, first run `codex login status` and confirm it says `Logged in using ChatGPT`. Then start the service and submit `mode=codex`. This runs `codex exec` locally with a read-only sandbox and structured output; it uses your Codex plan usage. Set `DEPTH_CODEX_MODEL` only if you want to override the CLI's default model. Do not expose this local service to the public internet.
 
+The Depth process must be able to write to Codex's local state directory (`CODEX_HOME`, normally `~/.codex`) even when `codex exec --ephemeral` is used. If it reports a permission error, start Depth from a shell with access to your own writable Codex home. For a separate location, create a private directory, sign in there, and point Depth to it:
+
+```bash
+mkdir -p "$HOME/.codex-depth"
+CODEX_HOME="$HOME/.codex-depth" codex login
+CODEX_HOME="$HOME/.codex-depth" codex login status
+DEPTH_CODEX_HOME="$HOME/.codex-depth" .venv/bin/uvicorn backend.depth.api:app --port 8000
+```
+
+Run these commands as the same OS user that runs Depth. `DEPTH_CODEX_HOME` must already exist. Do not commit, share, or copy Codex authentication files. Harsh's controlled-response Lawyer handoff test verifies the handoff, but a fully live evaluation still requires a successful `mode=codex` Depth run in his environment.
+
 For a three-track mock demo, copy a synthetic `text` value from `backend/depth/fixtures.py` into the `project_text` form field, then submit its matching `answer` to question `Q1`. These examples are intentionally synthetic and have not been human reviewed. Arbitrary pasted claims remain unassessed in mock mode.
 
 Run `.venv/bin/pytest` for tests. The GitHub remote exists; branch protection has not been verified.

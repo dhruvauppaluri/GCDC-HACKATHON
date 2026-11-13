@@ -210,6 +210,17 @@ def test_codex_cli_runs_ephemeral_read_only(monkeypatch):
     assert "dimensions" in codex_adapter.codex_json("Assess", {"answers": []}, answer_only=True)
 
 
+def test_codex_cli_reports_unwritable_state_and_uses_configured_home(monkeypatch, tmp_path):
+    monkeypatch.setattr(codex_adapter.shutil, "which", lambda _: "/usr/local/bin/codex")
+    monkeypatch.setenv("DEPTH_CODEX_HOME", str(tmp_path))
+    def fake_run(command, **kwargs):
+        assert kwargs["env"]["CODEX_HOME"] == str(tmp_path)
+        return type("Result", (), {"returncode": 1, "stderr": "Permission denied (os error 13) writing local state"})()
+    monkeypatch.setattr(codex_adapter.subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="Codex CLI cannot write its local state"):
+        codex_adapter.codex_json("Assess", {"answers": []}, answer_only=True)
+
+
 def wait_for(client, job_id):
     for _ in range(100):
         data = client.get(f"/depth/evaluations/{job_id}").json()
