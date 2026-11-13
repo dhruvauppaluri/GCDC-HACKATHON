@@ -29,6 +29,7 @@ class Store:
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, salt TEXT NOT NULL, password_hash TEXT NOT NULL, profile TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
+            db.execute("CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
 
     def connect(self):
         db = sqlite3.connect(self.path)
@@ -91,3 +92,12 @@ class Store:
             profile.update(changes)
             db.execute("UPDATE users SET profile=? WHERE id=?", (json.dumps(profile), user_id))
         return profile
+
+    def put_case(self, case_id: str, user_id: str, payload: dict):
+        with self.lock, self.connect() as db:
+            db.execute("INSERT INTO cases VALUES (?,?,?,?)", (case_id, user_id, json.dumps(payload), utcnow().isoformat()))
+
+    def get_case(self, case_id: str, user_id: str):
+        with self.connect() as db:
+            row = db.execute("SELECT payload,created_at FROM cases WHERE id=? AND user_id=?", (case_id, user_id)).fetchone()
+        return {**json.loads(row["payload"]), "created_at": row["created_at"]} if row else None

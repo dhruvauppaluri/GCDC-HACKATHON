@@ -15,8 +15,7 @@ RATING = {
 }
 
 
-def schema(answer_only: bool) -> dict:
-    names = ("conceptual", "systems", "tradeoffs") if answer_only else ("conceptual", "implementation", "systems", "tradeoffs", "validation")
+def schema(answer_only: bool, names: tuple[str, ...]) -> dict:
     dimensions = {"type": "object", "properties": {name: RATING for name in names}, "required": list(names), "additionalProperties": False}
     if answer_only:
         properties = {"dimensions": dimensions}
@@ -34,7 +33,7 @@ def schema(answer_only: bool) -> dict:
     return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
 
 
-def codex_json(system: str, content: dict, *, answer_only: bool = False) -> dict:
+def codex_json(system: str, content: dict, *, answer_only: bool = False, dimensions: tuple[str, ...] | None = None) -> dict:
     binary = shutil.which("codex")
     if not binary:
         raise RuntimeError("Codex CLI is not installed")
@@ -42,7 +41,8 @@ def codex_json(system: str, content: dict, *, answer_only: bool = False) -> dict
     with TemporaryDirectory(prefix="sc-hack-codex-") as directory:
         schema_path = Path(directory) / "schema.json"
         output_path = Path(directory) / "result.json"
-        schema_path.write_text(json.dumps(schema(answer_only)))
+        names = dimensions or (("conceptual", "systems", "tradeoffs") if answer_only else ("conceptual", "implementation", "systems", "tradeoffs", "validation"))
+        schema_path.write_text(json.dumps(schema(answer_only, names)))
         command = [binary, "exec", "--ephemeral", "--sandbox", "read-only", "--skip-git-repo-check", "--ignore-user-config", "--output-schema", str(schema_path), "--output-last-message", str(output_path)]
         if model := os.getenv("DEPTH_CODEX_MODEL"):
             command.extend(["--model", model])
