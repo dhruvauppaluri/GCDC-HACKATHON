@@ -1,5 +1,6 @@
 """PROTOTYPE: cited pluses and minuses for projects, work experience and skills."""
 import argparse
+from difflib import SequenceMatcher
 import json
 from pathlib import Path
 from uuid import UUID
@@ -196,6 +197,20 @@ def validate(review, requirements, evidence):
     return review
 
 
+def clean_negative(review, positive, requirements):
+    """Drop counterarguments that repeat strengths or invent a mastery bar."""
+    job_text = " ".join(item["text"] for item in requirements).casefold()
+    for category in CATEGORIES:
+        strengths = [item["text"].casefold() for item in positive[category]]
+        review[category] = [
+            item for item in review[category]
+            if not ("mastery" in item["text"].casefold() and "mastery" not in job_text)
+            and not any(SequenceMatcher(None, item["text"].casefold(), strength).ratio() >= 0.9
+                        for strength in strengths)
+        ]
+    return review
+
+
 def review_with_ollama(model, role, requirements, evidence, depth_projects, positive_review=None):
     system = f"""You are the {role} Lawyer. {ROLES[role]}
 Return three arrays: projects, work_experience, skills_required_knowledge.
@@ -278,7 +293,9 @@ def main():
             if not args.preview:
                 output["model"] = args.model
                 output["lawyers"] = {"positive": review_with_ollama(args.model, "positive", requirements, evidence, depth_projects)}
-                output["lawyers"]["negative"] = review_with_ollama(args.model, "negative", requirements, evidence, depth_projects, output["lawyers"]["positive"])
+                output["lawyers"]["negative"] = clean_negative(
+                    review_with_ollama(args.model, "negative", requirements, evidence, depth_projects, output["lawyers"]["positive"]),
+                    output["lawyers"]["positive"], requirements)
                 output["categories"] = {
                     category: {"pluses": output["lawyers"]["positive"][category],
                                "minuses": output["lawyers"]["negative"][category]}
@@ -313,7 +330,9 @@ def main():
         if not args.preview:
             output["model"] = args.model
             output["lawyers"] = {"positive": review_with_ollama(args.model, "positive", requirements, evidence, depth_projects)}
-            output["lawyers"]["negative"] = review_with_ollama(args.model, "negative", requirements, evidence, depth_projects, output["lawyers"]["positive"])
+            output["lawyers"]["negative"] = clean_negative(
+                review_with_ollama(args.model, "negative", requirements, evidence, depth_projects, output["lawyers"]["positive"]),
+                output["lawyers"]["positive"], requirements)
             output["categories"] = {
                 category: {"pluses": output["lawyers"]["positive"][category],
                            "minuses": output["lawyers"]["negative"][category]}
