@@ -7,11 +7,11 @@
 - Current task: Track-specific Depth scoring and selected-project handoff to Paralegal/Lawyer/Judge
 - Status: draft PR #3 opened from `agent/dhruva/depth-integration`; 28 backend tests, frontend build, two-service smoke, and a synthetic Codex-mode evaluation pass
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
-- Work in progress: versioned case bundle, GitHub/website/resume-claim project sources, safe partial re-imports, peer review of shared contract
+- Work in progress: peer review of the versioned case contract and Rishi/Harsh integration handoff; GitHub/website/resume-claim project sources and safe partial re-imports are implemented
 - Next steps: obtain Rishi and Harsh's GitHub identities and technical path allocation, human-review HW/CS/PM calibration examples, agree on authenticated case handoff for their Lawyer service, connect their Paralegal/Lawyer/Judge implementation to the case bundle
 - Expected inputs: one project, career track, public GitHub URL and/or written evidence, optional candidate answers
 - Expected outputs: cited project-depth assessment, questions, versioned revisions
-- Interfaces exposed: track-specific Depth HTTP API and authenticated website case bundle in `docs/api-contracts.md`
+- Interfaces exposed: track-specific Depth HTTP API and authenticated website case bundle in `docs/api-contracts.md`; peer handoff in `docs/rishi-harsh-integration-handoff.md`
 - Dependencies: approved shared contract; local Codex CLI sign-in for `mode=codex` or an API credential for `mode=live`
 - Blockers: peer identities and path allocation, human-reviewed calibration, Venya's repo invitation; private-repo branch protection requires a plan upgrade or a different enforcement setup
 - Files modified: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, own status file, integration-reviewed docs and shared context on feature branch

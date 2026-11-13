@@ -35,3 +35,5 @@ For Research integration, set `RESEARCH_JOBS_FILE` to a JSON array matching the 
 ## Selected-project Depth handoff
 
 Start the Depth service on port 8000 and the website on port 8010 in separate terminals. Set `DEPTH_INTEGRATION_MODE=codex` on the website process for real local evaluation, or `live` with an API credential; the default `mock` mode deliberately leaves arbitrary projects unassessed. `DEPTH_API_URL` defaults to `http://127.0.0.1:8000`. Sign in, import public GitHub or website projects, select up to five, open a role match, and choose **Assess selected projects**. The resulting case shows project findings and preparation topics. Its authenticated `GET /api/cases/{id}` response is the versioned, cited handoff for the jointly owned Paralegal, Lawyer, and Judge work. Those stages are not implemented by this branch, so this page does not show a hiring verdict.
+
+Rishi and Harsh's next integration steps, source rules, and acceptance checks are in [their handoff guide](docs/rishi-harsh-integration-handoff.md).
