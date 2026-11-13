@@ -129,7 +129,7 @@ def validate(review, requirements, evidence):
             if point["kind"] == "artifact_evidence" and not any(
                 allowed[key]["source"] in {"depth_repository", "depth_document"} for key in ids
             ):
-                raise ValueError("Artifact evidence needs an artifact citation.")
+                point["kind"] = "supported_claim"
     return review
 
 
@@ -144,7 +144,7 @@ Skills/required knowledge: assess applied and foundational knowledge against the
 Cover all three categories even when the job requirements are phrased as skills.
 Each text must be a full sentence explaining role relevance or a specific limitation, never just a copied title or quote. For the negative role, explicitly explain what remains unknown or what contradicts a requirement. A course name is never evidence of a gap. For example, missing responsibility details can be an unknown in work experience. Cite supplied evidence IDs.
 kind supported_claim means self-reported resume or candidate answer.
-kind artifact_evidence requires repository or document evidence.
+kind artifact_evidence requires a depth_repository or depth_document citation. Cite the original Depth excerpt ID when discussing its findings. Use supported_claim when citing only résumé or answer evidence.
 kind gap requires an explicit contradiction or missing REQUIRED qualification established by evidence.
 kind unknown means missing information or verification; citations may be empty.
 Missing prior internships is not a weakness unless the job requires them.
