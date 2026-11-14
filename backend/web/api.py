@@ -2,6 +2,7 @@
 import io
 import os
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
@@ -11,6 +12,7 @@ from pypdf import PdfReader
 import httpx
 
 from .imports import import_github, import_website, validate_public_url
+from .cases import hydrate_case, start_depth
 from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, suggest_tracks
 from .storage import Store
 
@@ -63,6 +65,16 @@ class Links(BaseModel):
 
 class Selection(BaseModel):
     selected_ids: list[str]
+    contributions: dict[str, str] = Field(default_factory=dict)
+
+
+class ResumeProject(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    summary: str = Field(min_length=1, max_length=2000)
+
+
+class NewCase(BaseModel):
+    job_id: str = Field(min_length=1, max_length=120)
 
 
 @app.middleware("http")
@@ -206,43 +218,66 @@ def import_projects(user=Depends(current_user)):
     p = user["profile"]
     if not p["github_url"] and not p["website_url"]:
         raise HTTPException(422, "Add a GitHub or website link first")
-    projects, errors = [], []
+    projects, errors, refreshed_sources = [], [], set()
     for field, importer in (("github_url", import_github), ("website_url", import_website)):
         if p[field]:
             try:
                 projects.extend(importer(p[field]))
+                refreshed_sources.add("github" if field == "github_url" else "website")
             except (ValueError, httpx.HTTPError, KeyError) as exc:
                 errors.append(f"{field}: {exc}")
-    if projects:
-        previous = {item["id"]: item["selected"] for item in p["projects"]}
+    if refreshed_sources:
+        previous = {item["id"]: item for item in p["projects"]}
         for item in projects:
-            item["selected"] = previous.get(item["id"], False)
+            old = previous.get(item["id"], {})
+            item["selected"] = old.get("selected", False)
+            item["contribution"] = old.get("contribution", "")
+        projects.extend(item for item in p["projects"] if item["source"] not in refreshed_sources)
         store.update_profile(user["id"], {"projects": projects})
-    return {"projects": projects if projects else p["projects"], "errors": errors}
+    return {"projects": projects if refreshed_sources else p["projects"], "errors": errors}
 
 
 @app.patch("/api/profile/projects")
 def select_projects(body: Selection, user=Depends(current_user)):
     valid = {item["id"] for item in user["profile"]["projects"]}
-    if any(id not in valid for id in body.selected_ids):
+    if any(id not in valid for id in body.selected_ids) or any(id not in valid for id in body.contributions):
         raise HTTPException(422, "Unknown project")
-    projects = [{**item, "selected": item["id"] in body.selected_ids} for item in user["profile"]["projects"]]
+    if any(len(text) > 2000 for text in body.contributions.values()):
+        raise HTTPException(422, "Contribution exceeds 2000 characters")
+    projects = [{**item, "selected": item["id"] in body.selected_ids, "contribution": body.contributions.get(item["id"], item.get("contribution", "")).strip()} for item in user["profile"]["projects"]]
     store.update_profile(user["id"], {"projects": projects})
     return {"projects": projects}
 
 
-@app.get("/api/profile/export")
-def export_profile(user=Depends(current_user)):
-    """Authenticated candidate payload for Research/Judge integration."""
+@app.post("/api/profile/resume-project")
+def add_resume_project(body: ResumeProject, user=Depends(current_user)):
+    if not user["profile"]["resume_text"]:
+        raise HTTPException(409, "Upload a resume first")
+    title, summary = body.title.strip(), body.summary.strip()
+    if not title or not summary:
+        raise HTTPException(422, "Project title and summary are required")
+    project = {"id": f"resume:{uuid4()}", "source": "resume", "title": title, "url": "", "summary": summary, "contribution": summary, "selected": False}
+    projects = [*user["profile"]["projects"], project]
+    store.update_profile(user["id"], {"projects": projects})
+    return {"project": project, "projects": projects}
+
+
+def candidate_export(user):
+    """Snapshot of candidate claims and selected project context."""
     p = user["profile"]
     return {
         "candidate_id": user["id"], "first_name": p["first_name"], "last_name": p["last_name"],
         "target_tracks": [TRACKS[t] for t in p["target_tracks"] if t in TRACKS],
         "interests": p["interests"], "resume_text": p["resume_text"],
         "skills": {TRACKS[t]: values for t, values in p["skills"].items() if t in TRACKS},
-        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title"}} for item in p["projects"] if item.get("selected")],
+        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title", "contribution"}} for item in p["projects"] if item.get("selected")],
         "links": {key: p[key] for key in ("linkedin_url", "github_url", "website_url")},
     }
+
+
+@app.get("/api/profile/export")
+def export_profile(user=Depends(current_user)):
+    return candidate_export(user)
 
 
 @app.get("/api/jobs/matches")
@@ -255,6 +290,42 @@ def matches(user=Depends(current_user)):
     except (ValueError, OSError) as exc:
         raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
     return {"jobs": match_jobs(user["profile"], jobs)}
+
+
+@app.post("/api/cases", status_code=202)
+def create_case(body: NewCase, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    selected = [item for item in user["profile"]["projects"] if item.get("selected")]
+    if not selected:
+        raise HTTPException(422, "Select at least one project first")
+    if len(selected) > 5:
+        raise HTTPException(422, "Select at most five projects")
+    source = os.getenv("RESEARCH_JOBS_FILE")
+    try:
+        jobs = load_jobs(Path(source) if source else None)
+    except (ValueError, OSError) as exc:
+        raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
+    job = next((item for item in jobs if item["job_id"] == body.job_id), None)
+    if not job or job["track"] not in candidate_export(user)["target_tracks"]:
+        raise HTTPException(404, "Job is unavailable for this candidate")
+    projects = []
+    for project in selected:
+        try:
+            projects.append({"project": project, "evaluation_id": start_depth(project, job["track"])})
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            projects.append({"project": project, "evaluation_id": None, "start_error": f"Depth service unavailable: {exc}"})
+    case_id = str(uuid4())
+    store.put_case(case_id, user["id"], {"case_id": case_id, "candidate": candidate_export(user), "job": job, "projects": projects})
+    return {"case_id": case_id, "status": "pending" if any(item["evaluation_id"] for item in projects) else "partial"}
+
+
+@app.get("/api/cases/{case_id}")
+def get_case(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    return hydrate_case(case)
 
 
 DIST = Path(__file__).resolve().parents[2] / "web" / "dist"

@@ -13,9 +13,10 @@ from backend.depth.api import app
 from backend.depth.fixtures import SCENARIOS
 from backend.depth import ingestion
 from backend.depth.ingestion import extract_upload, make_evidence, parse_github_url
+from backend.depth.rubrics import ANSWER_CRITERIA, ARTIFACT_CRITERIA, RUBRICS
 
 
-def test_all_four_mock_scenarios_and_answer_revision():
+def test_all_three_mock_scenarios_and_answer_revision():
     for track, fixture in SCENARIOS.items():
         evidence = make_evidence([{"source_type": "claim", "location": "project_text", "text": fixture["text"]}])
         initial = evaluation.initial_assessment(track, track, None, None, evidence, [], "mock")
@@ -26,10 +27,13 @@ def test_all_four_mock_scenarios_and_answer_revision():
         updated = evaluation.revise_assessment(initial, [{"question_id": "Q1", "answer": fixture["answer"]}])
         assert updated["revision"] == 1
         assert updated["depth_score"] != initial["depth_score"]
+        assert updated["confidence"] == "low"
         assert updated["history"][0]["depth_score"] == initial["depth_score"]
-        assert updated["dimensions"]["implementation"] == initial["dimensions"]["implementation"]
-        assert updated["dimensions"]["validation"] == initial["dimensions"]["validation"]
-        assert updated["dimensions"]["conceptual"]["evidence_ids"] == [updated["answers"][0]["evidence_id"]]
+        for name in ARTIFACT_CRITERIA[track]:
+            assert updated["dimensions"][name] == initial["dimensions"][name]
+        for name in ANSWER_CRITERIA[track]:
+            assert updated["dimensions"][name]["evidence_ids"] == [updated["answers"][0]["evidence_id"]]
+        assert set(updated["dimensions"]) == set(RUBRICS[track])
 
 
 def test_missing_evidence_is_unassessed():
@@ -43,16 +47,29 @@ def test_live_citation_gate_and_schema_parity(monkeypatch):
     evidence = make_evidence([{"source_type": "document", "location": "writeup", "text": "A project description"}])
     monkeypatch.setattr(evaluation, "llm_json", lambda *_: {
         "project_summary": "A project", "architecture_summary": "Unknown",
-        "dimensions": {"conceptual": {"score": 4, "evidence_ids": ["BAD"]}, "systems": {"score": 2, "evidence_ids": ["E1"]}},
+        "dimensions": {"scalability": {"score": 4, "evidence_ids": ["BAD"]}, "scenario_robustness": {"score": 2, "evidence_ids": ["E1"]}},
         "demonstrated_skills": [{"skill": "unsupported", "evidence_ids": ["BAD"]}, {"skill": "description", "evidence_ids": ["E1"]}],
         "unverified_skills": [], "follow_up_questions": [],
     })
     live = evaluation.initial_assessment("x", "software", None, None, evidence, [], "live")
     mock = evaluation.initial_assessment("x", "software", None, None, evidence, [], "mock")
     assert set(live) == set(mock)
-    assert live["dimensions"]["conceptual"] is None
-    assert live["dimensions"]["systems"]["score"] == 2
+    assert live["dimensions"]["scalability"] is None
+    assert live["dimensions"]["scenario_robustness"]["score"] == 2
     assert [s["skill"] for s in live["demonstrated_skills"]] == ["description"]
+
+
+def test_website_description_cannot_establish_implementation(monkeypatch):
+    evidence = make_evidence([{"source_type": "website", "location": "https://example.com", "text": "We built a scalable Python app."}])
+    monkeypatch.setattr(evaluation, "llm_json", lambda *_: {
+        "dimensions": {"scalability": {"score": 2, "evidence_ids": ["E1"]}, "skill_execution": {"score": 4, "evidence_ids": ["E1"]}},
+        "demonstrated_skills": [{"skill": "Python", "evidence_ids": ["E1"]}],
+    })
+    result = evaluation.initial_assessment("p", "software", None, None, evidence, [], "live", "https://example.com")
+    assert result["website_url"] == "https://example.com"
+    assert result["dimensions"]["skill_execution"] is None
+    assert result["demonstrated_skills"] == []
+    assert result["dimensions"]["scalability"]["score"] == 2
 
 
 def test_extract_upload_formats():
@@ -77,6 +94,38 @@ def test_public_github_url_validation():
     for url in ["http://github.com/a/b", "https://evil.example/a/b", "https://github.com/a/b/tree/main", "https://user:pass@github.com/a/b"]:
         with pytest.raises(ValueError):
             parse_github_url(url)
+
+
+def test_public_website_extraction_is_bounded_and_rejects_private_dns(monkeypatch):
+    monkeypatch.setattr(ingestion.socket, "getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("127.0.0.1", 443))])
+    with pytest.raises(ValueError, match="public address"):
+        ingestion.validate_public_website_url("https://internal.example")
+    monkeypatch.setattr(ingestion.socket, "getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("93.184.215.14", 443))])
+    class Response:
+        status_code = 200
+        headers = {"content-type": "text/html"}
+        def raise_for_status(self):
+            pass
+        def iter_bytes(self):
+            yield b"<html><script>ignore me</script><main>Project details</main></html>"
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+    class Client:
+        def __init__(self, **kwargs):
+            assert kwargs["follow_redirects"] is False
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def stream(self, *args, **kwargs):
+            return Response()
+    monkeypatch.setattr(ingestion.httpx, "Client", Client)
+    sources, limits = ingestion.public_website_evidence("https://example.com/project")
+    assert sources[0]["source_type"] == "website"
+    assert sources[0]["text"] == "Project details"
+    assert limits == []
 
 
 def test_repository_ingestion_pins_commit_and_reads_source(monkeypatch):
@@ -134,8 +183,8 @@ def test_codex_mode_uses_cli_and_preserves_answer_provenance(monkeypatch):
     def fake_codex(system, content, **kwargs):
         calls.append(kwargs)
         if kwargs.get("answer_only"):
-            return {"dimensions": {"conceptual": {"score": 3, "evidence_ids": [content["answers"][0]["id"]]}, "systems": None, "tradeoffs": None}}
-        return {"project_summary": "Candidate claims an API queue.", "summary_evidence_ids": ["E1"], "architecture_summary": "Unverified", "architecture_evidence_ids": [], "dimensions": {name: None for name in evaluation.DIMENSIONS}, "demonstrated_skills": [], "unverified_skills": ["queue design"], "follow_up_questions": [{"id": "Q1", "question": "Why a queue?"}]}
+            return {"dimensions": {"scalability": {"score": 3, "evidence_ids": [content["answers"][0]["id"]]}, "scenario_robustness": None}}
+        return {"project_summary": "Candidate claims an API queue.", "summary_evidence_ids": ["E1"], "architecture_summary": "Unverified", "architecture_evidence_ids": [], "dimensions": {name: None for name in RUBRICS["software"]}, "demonstrated_skills": [], "unverified_skills": ["queue design"], "follow_up_questions": [{"id": "Q1", "question": "Why a queue?"}]}
     monkeypatch.setattr(evaluation, "codex_json", fake_codex)
     initial = evaluation.initial_assessment("p", "software", None, None, evidence, [], "codex")
     assert initial["evaluation_mode"] == "codex"
@@ -143,8 +192,9 @@ def test_codex_mode_uses_cli_and_preserves_answer_provenance(monkeypatch):
     assert any("self-reported" in text for text in initial["limitations"])
     revised = evaluation.revise_assessment(initial, [{"question_id": "Q1", "answer": "It absorbs bursts while the worker processes jobs."}])
     assert revised["depth_score"] == 7.5
-    assert revised["dimensions"]["conceptual"]["evidence_ids"] == ["E2"]
-    assert calls == [{}, {"answer_only": True}]
+    assert revised["confidence"] == "low"
+    assert revised["dimensions"]["scalability"]["evidence_ids"] == ["E2"]
+    assert calls == [{"dimensions": tuple(RUBRICS["software"])}, {"answer_only": True, "dimensions": ("scalability", "scenario_robustness")}]
 
 
 def test_codex_cli_runs_ephemeral_read_only(monkeypatch):
@@ -158,6 +208,17 @@ def test_codex_cli_runs_ephemeral_read_only(monkeypatch):
         return type("Result", (), {"returncode": 0})()
     monkeypatch.setattr(codex_adapter.subprocess, "run", fake_run)
     assert "dimensions" in codex_adapter.codex_json("Assess", {"answers": []}, answer_only=True)
+
+
+def test_codex_cli_reports_unwritable_state_and_uses_configured_home(monkeypatch, tmp_path):
+    monkeypatch.setattr(codex_adapter.shutil, "which", lambda _: "/usr/local/bin/codex")
+    monkeypatch.setenv("DEPTH_CODEX_HOME", str(tmp_path))
+    def fake_run(command, **kwargs):
+        assert kwargs["env"]["CODEX_HOME"] == str(tmp_path)
+        return type("Result", (), {"returncode": 1, "stderr": "Permission denied (os error 13) writing local state"})()
+    monkeypatch.setattr(codex_adapter.subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="Codex CLI cannot write its local state"):
+        codex_adapter.codex_json("Assess", {"answers": []}, answer_only=True)
 
 
 def wait_for(client, job_id):
@@ -187,3 +248,4 @@ def test_async_api_and_failure(monkeypatch):
         failed = wait_for(client, response.json()["evaluation_id"])
         assert failed["status"] == "failed"
         assert "OPENAI_API_KEY" in failed["error"]
+        assert client.post("/depth/evaluations", data={"project_id": "old", "career_track": "business", "project_text": "test"}).status_code == 422

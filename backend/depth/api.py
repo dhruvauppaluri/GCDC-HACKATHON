@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from .evaluation import initial_assessment, revise_assessment
-from .ingestion import MAX_UPLOAD, extract_upload, make_evidence, parse_github_url, public_repository_evidence
+from .ingestion import MAX_UPLOAD, extract_upload, make_evidence, parse_github_url, public_repository_evidence, public_website_evidence, validate_public_website_url
 from .storage import JobStore
 
 
@@ -38,6 +38,11 @@ def process_job(job_id: str):
                 commit_sha, repository_sources, repository_limits = public_repository_evidence(payload["repository_url"])
                 sources.extend(repository_sources)
                 limitations.extend(repository_limits)
+            if payload.get("website_url"):
+                website_sources, website_limits = public_website_evidence(payload["website_url"])
+                sources.extend(website_sources)
+                limitations.extend(website_limits)
+                limitations.append("Website descriptions do not independently verify implementation or candidate contribution")
             if payload.get("project_text"):
                 sources.append({"source_type": "claim", "location": "project_text", "text": payload["project_text"][:180_000]})
             for file in payload.get("files", []):
@@ -55,7 +60,7 @@ def process_job(job_id: str):
             evidence = make_evidence(sources)
             if sum((len(s["text"].splitlines()) + 34) // 35 for s in sources) > len(evidence):
                 limitations.append("Evidence excerpt budget reached (100 excerpts or 60000 characters)")
-            result = initial_assessment(payload["project_id"], payload["career_track"], payload.get("repository_url"), commit_sha, evidence, limitations, payload["mode"])
+            result = initial_assessment(payload["project_id"], payload["career_track"], payload.get("repository_url"), commit_sha, evidence, limitations, payload["mode"], payload.get("website_url"))
         store.set(job_id, "complete", result=result)
     except Exception as exc:
         store.set(job_id, "failed", result=old_result, error=f"{type(exc).__name__}: {exc}")
@@ -85,19 +90,25 @@ async def create_evaluation(
     project_id: str = Form(...),
     career_track: str = Form(...),
     repository_url: str | None = Form(None),
+    website_url: str | None = Form(None),
     project_text: str | None = Form(None),
     mode: str = Form("mock"),
     files: list[UploadFile] | None = File(None),
 ):
-    if career_track not in {"hardware", "software", "business", "product"} or mode not in {"mock", "live", "codex"}:
+    if career_track not in {"hardware", "software", "product"} or mode not in {"mock", "live", "codex"}:
         raise HTTPException(422, "Invalid track or mode")
     if not project_id.strip() or len(project_id) > 120:
         raise HTTPException(422, "Invalid project_id")
-    if not repository_url and not project_text and not files:
-        raise HTTPException(422, "Provide a repository, project text, or file")
+    if not repository_url and not website_url and not project_text and not files:
+        raise HTTPException(422, "Provide a repository, website, project text, or file")
     if repository_url:
         try:
             parse_github_url(repository_url)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+    if website_url:
+        try:
+            validate_public_website_url(website_url)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
     if project_text and len(project_text) > 180_000:
@@ -118,7 +129,7 @@ async def create_evaluation(
         path = upload_dir / f"{index}-{name}"
         path.write_bytes(data)
         uploaded.append({"name": name, "path": str(path)})
-    payload = {"project_id": project_id, "career_track": career_track, "repository_url": repository_url, "project_text": project_text, "mode": mode, "files": uploaded}
+    payload = {"project_id": project_id, "career_track": career_track, "repository_url": repository_url, "website_url": website_url, "project_text": project_text, "mode": mode, "files": uploaded}
     store.put(job_id, payload)
     executor.submit(process_job, job_id)
     return {"evaluation_id": job_id, "status": "queued"}

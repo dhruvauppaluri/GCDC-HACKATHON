@@ -1,7 +1,10 @@
 """Bounded, read-only public evidence extraction. Never executes repository code."""
 import base64
+from html.parser import HTMLParser
+import ipaddress
 from io import BytesIO
 import re
+import socket
 from zipfile import ZipFile
 from urllib.parse import quote, urlparse
 
@@ -14,6 +17,60 @@ MAX_REPO_FILES = 30
 MAX_SOURCE_CHARS = 180_000
 MAX_EVIDENCE_CHARS = 60_000
 ALLOWED_SUFFIXES = (".py", ".js", ".ts", ".tsx", ".swift", ".sv", ".v", ".c", ".cpp", ".h", ".rs", ".go", ".md", ".txt", ".json", ".yaml", ".yml", ".toml", ".sh", ".sql", ".csv")
+
+
+def validate_public_website_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.port or parsed.fragment:
+        raise ValueError("Use a public HTTPS website URL")
+    if parsed.hostname.lower() in {"github.com", "api.github.com", "linkedin.com", "www.linkedin.com"}:
+        raise ValueError("Use the repository field for GitHub; LinkedIn is not project evidence")
+    try:
+        addresses = socket.getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValueError("Website could not be found") from exc
+    if not addresses or any(not ipaddress.ip_address(address[4][0]).is_global for address in addresses):
+        raise ValueError("Website must resolve to a public address")
+
+
+class PageText(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts = []
+        self.skip = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in {"script", "style", "noscript"}:
+            self.skip += 1
+
+    def handle_endtag(self, tag):
+        if tag in {"script", "style", "noscript"} and self.skip:
+            self.skip -= 1
+
+    def handle_data(self, data):
+        if not self.skip and data.strip():
+            self.parts.append(data.strip())
+
+
+def public_website_evidence(url: str) -> tuple[list[dict], list[str]]:
+    validate_public_website_url(url)
+    with httpx.Client(timeout=8, follow_redirects=False, trust_env=False) as client:
+        with client.stream("GET", url, headers={"User-Agent": "SC-HACK-depth-prototype"}) as response:
+            response.raise_for_status()
+            if not 200 <= response.status_code < 300 or "text/html" not in response.headers.get("content-type", ""):
+                raise ValueError("Website must return an HTML page without redirects")
+            chunks, total = [], 0
+            for chunk in response.iter_bytes():
+                total += len(chunk)
+                if total > 100_000:
+                    break
+                chunks.append(chunk)
+    parser = PageText()
+    parser.feed(b"".join(chunks).decode("utf-8", errors="replace"))
+    text = "\n".join(parser.parts)[:MAX_SOURCE_CHARS]
+    if not text.strip():
+        return [], ["No readable website text was found"]
+    return [{"source_type": "website", "location": url, "text": text}], (["Website text was truncated at 100 KB"] if total > 100_000 else [])
 
 
 def parse_github_url(url: str) -> tuple[str, str]:
