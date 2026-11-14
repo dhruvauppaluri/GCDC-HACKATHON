@@ -53,7 +53,7 @@ def hydrate_case(case: dict) -> dict:
             for item in result.get("evidence", []):
                 citations.append({"ref": f"depth:{project['evaluation_id']}:{item['id']}", "project_id": project["project"]["id"], **item})
     statuses = {item["status"] for item in assessments}
-    status = "complete" if statuses == {"complete"} else "partial" if statuses & {"failed", "unavailable"} else "pending"
+    status = "pending" if statuses - {"complete", "failed", "unavailable"} else "complete" if statuses == {"complete"} else "partial"
     demonstrated = {item["skill"].casefold() for assessment in assessments if assessment["status"] == "complete" for item in assessment["result"].get("demonstrated_skills", [])}
     required = [str(skill) for skill in case["job"].get("required_skills", [])]
     questions = [{"project_id": assessment["project"]["id"], **q} for assessment in assessments if assessment["status"] == "complete" for q in assessment["result"].get("follow_up_questions", [])]
@@ -72,3 +72,4 @@ def hydrate_case(case: dict) -> dict:
             "questions": questions,
         },
     }
+
