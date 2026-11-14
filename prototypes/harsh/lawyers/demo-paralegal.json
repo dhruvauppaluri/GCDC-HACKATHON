@@ -1,0 +1,60 @@
+{
+  "synthetic": true,
+  "applications_reviewed": 1,
+  "applications_mentioning_each_signal": {
+    "Algorithms and data structures": 1,
+    "Programming languages": 1,
+    "Testing and debugging": 1
+  },
+  "applications": [
+    {
+      "id": "google-01",
+      "company": "Google",
+      "role": "Software Engineering Intern, BS",
+      "education": "B.S. in Computer Science. Expected graduation: December 2027. GPA: 2.80/4.00.",
+      "gpa": {
+        "value": 2.8,
+        "scale": 4.0
+      },
+      "coursework": "Programming Fundamentals, Data Structures, Software Engineering",
+      "projects": [
+        "Built a Java campus shuttle planner using breadth-first search and tested disconnected stops."
+      ],
+      "prior_experience": "No prior internships. Volunteered as a campus coding tutor.",
+      "evidence": [
+        {
+          "signal": "Algorithms and data structures",
+          "terms": [
+            "Data Structures"
+          ],
+          "field": "coursework",
+          "quote": "Programming Fundamentals, Data Structures, Software Engineering"
+        },
+        {
+          "signal": "Programming languages",
+          "terms": [
+            "Java"
+          ],
+          "field": "projects",
+          "quote": "Built a Java campus shuttle planner using breadth-first search and tested disconnected stops."
+        },
+        {
+          "signal": "Algorithms and data structures",
+          "terms": [
+            "breadth-first search"
+          ],
+          "field": "projects",
+          "quote": "Built a Java campus shuttle planner using breadth-first search and tested disconnected stops."
+        },
+        {
+          "signal": "Testing and debugging",
+          "terms": [
+            "tested"
+          ],
+          "field": "projects",
+          "quote": "Built a Java campus shuttle planner using breadth-first search and tested disconnected stops."
+        }
+      ]
+    }
+  ]
+}
