@@ -190,4 +190,3 @@ def test_ollama_depth_result_reaches_lawyers_without_relabeling_output():
     assert inputs["actual_depth_modes"] == ["ollama"]
     assert inputs["depth_projects"][0]["dimensions"]["verification"]["evidence_ids"] == ["depth:e1:E1"]
     assert bundle["project_assessments"][0]["result"]["evaluation_mode"] == "ollama"
-
