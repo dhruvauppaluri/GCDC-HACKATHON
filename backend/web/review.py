@@ -173,4 +173,3 @@ def run_review(inputs: dict) -> dict:
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
         "judge": trial_judge(inputs, positive, negative),
     }
-
