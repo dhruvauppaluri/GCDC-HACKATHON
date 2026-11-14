@@ -1,7 +1,11 @@
 """Accounts, onboarding, profiles, and local demo jobs API."""
 import io
 import os
+from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event, Thread
+from urllib.error import URLError
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
@@ -13,12 +17,32 @@ import httpx
 
 from .imports import import_github, import_website, validate_public_url
 from .cases import hydrate_case, start_depth
-from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, suggest_tracks
+from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
+from .review import review_inputs, run_review
+from .simplify_feed import SimplifyFeed, enrich_listing
 from .storage import Store
 
 DATA_DIR = Path(os.getenv("WEB_DATA_DIR", ".web-data"))
 store = Store(DATA_DIR / "app.sqlite3")
-app = FastAPI(title="SC-HACK Candidate Experience")
+review_pool = ThreadPoolExecutor(max_workers=2)
+feed = SimplifyFeed(DATA_DIR / "simplify-cache.json")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    stop = Event()
+    def refresh_loop():
+        while not stop.is_set():
+            feed.get()
+            stop.wait(300)
+    thread = Thread(target=refresh_loop, name="simplify-feed-refresh", daemon=True)
+    thread.start()
+    yield
+    stop.set()
+    thread.join(timeout=1)
+
+
+app = FastAPI(title="SC-HACK Candidate Experience", lifespan=lifespan)
 
 
 def current_user(request: Request):
@@ -75,6 +99,13 @@ class ResumeProject(BaseModel):
 
 class NewCase(BaseModel):
     job_id: str = Field(min_length=1, max_length=120)
+
+
+class PastedJob(BaseModel):
+    description: str = Field(min_length=40, max_length=20_000)
+    title: str = Field(default="", max_length=120)
+    company: str = Field(default="", max_length=120)
+    track: str | None = None
 
 
 @app.middleware("http")
@@ -285,11 +316,35 @@ def matches(user=Depends(current_user)):
     if not user["profile"]["completed"]:
         raise HTTPException(409, "Complete your profile first")
     source = os.getenv("RESEARCH_JOBS_FILE")
+    feed_jobs, feed_status = feed.get()
     try:
-        jobs = load_jobs(Path(source) if source else None)
+        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
     except (ValueError, OSError) as exc:
         raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
-    return {"jobs": match_jobs(user["profile"], jobs)}
+    matched = match_jobs(user["profile"], jobs)
+    return {"jobs": matched[:40], "total_available": len(matched), "feed": feed_status}
+
+
+@app.post("/api/jobs/parse")
+def parse_pasted_job(body: PastedJob, user=Depends(current_user)):
+    try:
+        return parse_job_description(body.description, body.track, body.title, body.company)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.post("/api/jobs/pasted", status_code=201)
+def save_pasted_job(body: PastedJob, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    try:
+        job = parse_job_description(body.description, body.track, body.title, body.company)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    job = {key: value for key, value in job.items() if key != "inferred_track"}
+    job.update(job_id=f"pasted:{uuid4()}", source="pasted")
+    store.put_pasted_job(user["id"], job)
+    return {"job": match_jobs(user["profile"], [job])[0]}
 
 
 @app.post("/api/cases", status_code=202)
@@ -302,13 +357,16 @@ def create_case(body: NewCase, user=Depends(current_user)):
     if len(selected) > 5:
         raise HTTPException(422, "Select at most five projects")
     source = os.getenv("RESEARCH_JOBS_FILE")
+    feed_jobs, _ = feed.get()
     try:
-        jobs = load_jobs(Path(source) if source else None)
+        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
     except (ValueError, OSError) as exc:
         raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
     job = next((item for item in jobs if item["job_id"] == body.job_id), None)
-    if not job or job["track"] not in candidate_export(user)["target_tracks"]:
+    if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
         raise HTTPException(404, "Job is unavailable for this candidate")
+    if job.get("source") == "simplify":
+        job = enrich_listing(job)
     projects = []
     for project in selected:
         try:
@@ -326,6 +384,49 @@ def get_case(case_id: str, user=Depends(current_user)):
     if not case:
         raise HTTPException(404, "Case not found")
     return hydrate_case(case)
+
+
+@app.get("/api/cases/{case_id}/review-preview")
+def preview_case_review(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    bundle = hydrate_case(case)
+    if bundle["status"] == "pending":
+        raise HTTPException(409, "Project assessment is still running")
+    return review_inputs(bundle)
+
+
+def finish_case_review(case_id: str, inputs: dict):
+    try:
+        store.finish_review(case_id, result=run_review(inputs))
+    except (URLError, OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+        detail = "Ollama is unavailable. Start Ollama and pull the configured local model." if isinstance(exc, URLError) else str(exc)
+        store.finish_review(case_id, error=detail)
+
+
+@app.post("/api/cases/{case_id}/review", status_code=202)
+def start_case_review(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    current = store.get_review(case_id, user["id"])
+    if current:
+        return {"case_id": case_id, "status": current["status"]}
+    bundle = hydrate_case(case)
+    if bundle["status"] == "pending":
+        raise HTTPException(409, "Project assessment is still running")
+    inputs = review_inputs(bundle)
+    store.put_review(case_id, user["id"])
+    review_pool.submit(finish_case_review, case_id, inputs)
+    return {"case_id": case_id, "status": "pending"}
+
+
+@app.get("/api/cases/{case_id}/review")
+def get_case_review(case_id: str, user=Depends(current_user)):
+    if not store.get_case(case_id, user["id"]):
+        raise HTTPException(404, "Case not found")
+    return store.get_review(case_id, user["id"]) or {"status": "not_started", "result": None, "error": None}
 
 
 DIST = Path(__file__).resolve().parents[2] / "web" / "dist"

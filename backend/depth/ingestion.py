@@ -3,6 +3,7 @@ import base64
 from html.parser import HTMLParser
 import ipaddress
 from io import BytesIO
+import os
 import re
 import socket
 from zipfile import ZipFile
@@ -17,6 +18,10 @@ MAX_REPO_FILES = 30
 MAX_SOURCE_CHARS = 180_000
 MAX_EVIDENCE_CHARS = 60_000
 ALLOWED_SUFFIXES = (".py", ".js", ".ts", ".tsx", ".swift", ".sv", ".v", ".c", ".cpp", ".h", ".rs", ".go", ".md", ".txt", ".json", ".yaml", ".yml", ".toml", ".sh", ".sql", ".csv")
+
+
+def _rate_limited(response) -> bool:
+    return getattr(response, "status_code", None) == 403 and getattr(response, "headers", {}).get("x-ratelimit-remaining") == "0"
 
 
 def validate_public_website_url(url: str) -> None:
@@ -110,17 +115,25 @@ def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
     owner, repo = parse_github_url(url)
     base = f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}"
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "SC-HACK-depth-prototype"}
+    if token := os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
     limitations = []
     with httpx.Client(timeout=20, follow_redirects=False, headers=headers) as client:
         metadata = client.get(base)
+        if _rate_limited(metadata):
+            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
         metadata.raise_for_status()
         if metadata.json().get("private") is not False:
             raise ValueError("Repository must be public")
         branch = metadata.json()["default_branch"]
         commit_response = client.get(f"{base}/commits/{quote(branch)}")
+        if _rate_limited(commit_response):
+            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
         commit_response.raise_for_status()
         sha = commit_response.json()["sha"]
         tree_response = client.get(f"{base}/git/trees/{sha}", params={"recursive": "1"})
+        if _rate_limited(tree_response):
+            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
         tree_response.raise_for_status()
         tree = tree_response.json()
         if tree.get("truncated"):
@@ -136,6 +149,9 @@ def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
                 limitations.append("Repository text budget reached")
                 break
             blob = client.get(f"{base}/git/blobs/{item['sha']}")
+            if _rate_limited(blob):
+                limitations.append("GitHub API rate limit reached before all selected files were read")
+                break
             blob.raise_for_status()
             body = blob.json()
             if body.get("encoding") != "base64":

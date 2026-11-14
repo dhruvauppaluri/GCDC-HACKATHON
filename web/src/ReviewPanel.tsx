@@ -1,0 +1,16 @@
+type ReviewPoint = { text: string; evidence_ids: string[]; kind: string }
+type ReviewState = { status: string; error: string | null; result: { categories: Record<string, { pluses: ReviewPoint[]; minuses: ReviewPoint[] }>; judge: { verdict: string; eligibility: string; confidence: string; note: string } } | null }
+type ReviewPreview = { paralegal: { source: string; evidence: { signal: string; quote: string }[] } | null; synthetic_comparisons: { application_id: string; shared_claim_signals: string[]; example_project: string }[]; requirements: { text: string; kind: string }[] }
+
+export default function ReviewPanel({ review, preview }: { review: ReviewState | null; preview: ReviewPreview | null }) {
+  const result = review?.result
+  return <section className="panel depth-panel review-panel"><span className="eyebrow">FULL REVIEW · LOCAL TRIAL</span><h2>From evidence to arguments.</h2>
+    {preview ? <><p className="muted">Paralegal found {preview.paralegal?.evidence.length || 0} candidate claim signals using {preview.paralegal?.source === 'rishi_swe_extractor' ? 'Rishi’s SWE extractor' : 'local HW/PM term extraction'}. The job has {preview.requirements.length} parsed requirement or context entries.</p>
+      {preview.paralegal?.evidence.length ? <div className="parsed-tags"><strong>Claim signals</strong><div>{Array.from(new Set(preview.paralegal.evidence.map(item => item.signal))).map(signal => <span className="tag" key={signal}>{signal}</span>)}</div></div> : null}
+      {preview.synthetic_comparisons.length > 0 && <div className="comparison-list"><strong>Related synthetic SWE examples</strong><p className="hint">These are fictional application claims for comparison, not verified outcomes or project depth.</p>{preview.synthetic_comparisons.map(item => <p key={item.application_id}><b>{item.application_id}</b> · {item.shared_claim_signals.join(', ')}<br /><span className="muted">{item.example_project}</span></p>)}</div>}
+    </> : <p className="muted">Preparing the same case and citations for both Lawyers.</p>}
+    {review?.status === 'pending' && <p className="hint">The two local Ollama Lawyers are reviewing the case. This can take a few minutes.</p>}
+    {review?.status === 'failed' && <div className="error" role="alert">Lawyer review could not finish: {review.error}</div>}
+    {result && <><div className="trial-verdict"><strong>Provisional Judge: {result.judge.verdict.replaceAll('_', ' ')}</strong><span>Eligibility: {result.judge.eligibility.replaceAll('_', ' ')} · Confidence: {result.judge.confidence}</span><p>{result.judge.note}</p></div>{Object.entries(result.categories).map(([name, category]) => <div className="review-category" key={name}><h3>{name.replaceAll('_', ' ')}</h3><div className="review-columns"><div><strong>Advocate</strong>{category.pluses.length ? category.pluses.map((point, i) => <p key={i}>{point.text}<small>{point.kind} · {point.evidence_ids.join(', ')}</small></p>) : <p className="muted">No cited strength.</p>}</div><div><strong>Skeptic</strong>{category.minuses.length ? category.minuses.map((point, i) => <p key={i}>{point.text}<small>{point.kind} · {point.evidence_ids.join(', ') || 'Unverified'}</small></p>) : <p className="muted">No specific objection.</p>}</div></div></div>)}</>}
+  </section>
+}

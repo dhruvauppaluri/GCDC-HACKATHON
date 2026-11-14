@@ -15,7 +15,7 @@ from .storage import JobStore
 
 DATA_DIR = Path(os.getenv("DEPTH_DATA_DIR", ".depth-data"))
 store = JobStore(DATA_DIR / "jobs.sqlite3")
-executor = ThreadPoolExecutor(max_workers=2)
+executor = ThreadPoolExecutor(max_workers=max(1, int(os.getenv("DEPTH_WORKERS", "2"))))
 
 
 def process_job(job_id: str):
@@ -95,7 +95,7 @@ async def create_evaluation(
     mode: str = Form("mock"),
     files: list[UploadFile] | None = File(None),
 ):
-    if career_track not in {"hardware", "software", "product"} or mode not in {"mock", "live", "codex"}:
+    if career_track not in {"hardware", "software", "product"} or mode not in {"mock", "live", "codex", "ollama"}:
         raise HTTPException(422, "Invalid track or mode")
     if not project_id.strip() or len(project_id) > 120:
         raise HTTPException(422, "Invalid project_id")
