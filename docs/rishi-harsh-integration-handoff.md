@@ -12,6 +12,22 @@ This guide describes the integration surface on Dhruva's draft [Depth integratio
 
 The case endpoint requires the candidate's session cookie. For a Lawyer running in the same trusted application process, use the case-building functions with the authenticated candidate context. For a separate service, agree with Dhruva on a service-authenticated, case-scoped handoff before sending resume text or project evidence. Do not reuse a candidate's browser cookie as a service credential.
 
+## Branches and integration order (November 13)
+
+- `agent/dhruva/depth-integration` is draft PR #3. It provides the profile links, selected-project case bundle, track-specific Depth rubric, and the website display.
+- `agent/rishi/swe-intern-data` provides 60 **synthetic SWE** applications, a fixture-specific keyword Paralegal extractor, and a separate Lawyer citation-verification experiment. The simulated `demo_labels` are calibration data only and must not enter the runtime evidence bundle.
+- `agent/harsh/lawyers-prototype` provides the two local Ollama Lawyers and a `--case` mode that reads the versioned case bundle. It validates citation IDs and distinguishes candidate claims from inspected artifacts. It is a CLI prototype, not a web endpoint or Judge.
+
+These three branches merged without conflicts in a disposable local worktree. The combined backend suite passed 29 tests, Rishi's `google-01` extractor ran, and Harsh's case preview ran. A separate adapter smoke check passed a bundle from `backend.web.cases.hydrate_case` into Harsh's `case_inputs` and preserved a namespaced Depth citation. These checks did not run a live Codex evaluation, live Ollama review of an authenticated candidate, or a Judge verdict.
+
+Integrate in this order:
+
+1. Confirm Rishi's and Harsh's GitHub logins and their owned technical paths, then update the trusted ownership policy in an integration-reviewed PR. Open peer PRs from their existing branches; do not copy their commits into Dhruva's PR or bypass ownership checks.
+2. Review and merge draft PR #3, then rebase the peer PRs onto `main`. Merge Rishi's fixtures and Harsh's prototype with their authorship intact. Review Rishi's verifier with Harsh before adopting it; the current Lawyer prototype does not call it.
+3. In the trusted web backend, start a review only for an authenticated case. Pass the **same frozen case snapshot** to both Lawyers through a direct in-process adapter or a service-authenticated handoff. Run Ollama work outside the request thread, store status and cited output by case ID, and expose a candidate-authorized read endpoint. Keep mock, failed, and pending Depth assessments labeled unverified.
+4. Have Rishi and Harsh implement the Judge against the cited Lawyer output and original case snapshot. Require a separate eligibility determination, evidence-linked reasons, and an `unassessed` result when evidence is insufficient. Then add the review and verdict to the website under Dhruva's integration ownership.
+5. Use the SWE pool to test citation grounding and calibration, without treating simulated offers as real hiring ground truth. Add independently reviewed hardware and product examples before claiming all three tracks are calibrated.
+
 ## Work for the jointly owned pipeline
 
 1. **Research and Paralegal:** Produce structured job requirements in the three-track shape in [API contracts](api-contracts.md). Extract resume/application claims with source locations. Keep candidate claims distinct from inspected project evidence and keep the application's synthetic outcome label out of runtime input. Rishi's `agent/rishi/swe-intern-data` branch contains 60 fictional Google/Walmart applications, simulated `demo_labels`, and a keyword evidence extractor. It is an unmerged development fixture, not a trained or validated hiring model.
