@@ -72,4 +72,3 @@ def hydrate_case(case: dict) -> dict:
             "questions": questions,
         },
     }
-
