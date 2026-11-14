@@ -15,13 +15,6 @@ SCENARIOS = {
         "skills": ["API design", "integration testing"],
         "answer": "I separated the worker to keep slow jobs from blocking API requests; under higher load I would add idempotency keys and monitor queue latency.",
     },
-    "business": {
-        "text": "SC-HACK-FIXTURE-business: I compared three market segments using interview notes and a revenue model. I documented pricing assumptions and ran sensitivity analysis, but actual conversion data is unavailable.",
-        "summary": "Synthetic market segmentation and revenue analysis.",
-        "architecture": "Interview observations feed segment assumptions and a sensitivity-tested revenue model.",
-        "skills": ["market analysis", "sensitivity analysis"],
-        "answer": "I prioritized the segment with lower acquisition cost; if conversion fell below the modeled threshold I would test a different channel before expanding.",
-    },
     "product": {
         "text": "SC-HACK-FIXTURE-product: I interviewed users, prioritized onboarding friction, and wrote an experiment plan. A prototype reduced task steps in usability sessions, but retention impact has not been measured.",
         "summary": "Synthetic onboarding discovery and prototype experiment.",

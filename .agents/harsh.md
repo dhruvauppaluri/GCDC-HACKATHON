@@ -17,3 +17,11 @@
 - Files modified: none recorded
 - Latest relevant commit or PR: none
 - Last updated: 2026-11-09T00:00:00Z (initial placeholder)
+
+## Lawyer prototype
+
+- Scope: `prototypes/harsh/lawyers/` on `agent/harsh/lawyers-prototype`.
+- Status: pushed and smoke tested with local Qwen3 4B on one synthetic application.
+- Output: cited pluses and minuses for projects, work experience, and skills/required knowledge.
+- Pending: calibrate evidence interpretation, validate with Depth results, and integrate with the Judge.
+- Implementation commit: `9e8e11030d6a173777bb8b2ece8f097d75ef6f3b`.

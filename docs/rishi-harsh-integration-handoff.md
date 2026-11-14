@@ -1,0 +1,42 @@
+# Rishi and Harsh: Paralegal, Lawyer, and Judge handoff
+
+This guide describes the integration surface on Dhruva's draft [Depth integration PR](https://github.com/dhruvauppaluri/GCDC-HACKATHON/pull/3). Rishi and Harsh jointly own Research, Paralegal, the two Lawyers, and Judge. Their GitHub identities and technical file ownership still need to be recorded in the trusted base policy before either changes ownership-sensitive application code. Agree on path allocation and review the provisional [API contracts](api-contracts.md) with Dhruva first. Work on `agent/<developer>/<component>` branches; do not push feature work to `main`.
+
+## What is ready
+
+- The candidate profile accepts GitHub and personal website links, imports their public projects, and lets the candidate select projects and describe their own contribution. A candidate can also manually add a resume project; that entry remains a claim.
+- `POST /api/cases` takes a job ID for an authenticated, completed candidate. It snapshots the candidate, the job, and up to five selected projects, then starts a Depth evaluation for each. `GET /api/cases/{case_id}` returns a `schema_version: 1` bundle. See `backend/web/api.py` and `backend/web/cases.py`.
+- Each project assessment retains its source URL, candidate contribution, status, Depth result, and error if any. GitHub evidence is pinned to a commit; website text and resume claims are labeled separately. Partial import or Depth failure does not delete a selected link.
+- `citations` gives each Depth excerpt a unique `ref` of the form `depth:<evaluation_id>:<evidence_id>`. Ratings inside a Depth result use the local evidence ID, so resolve them against that assessment's evaluation ID before citing them across projects.
+- `preparation` lists exact required-skill name matches to demonstrated project skills and follow-up questions. Treat its “without project evidence” list as an evidence gap, **not** proof that the candidate lacks a skill.
+
+The case endpoint requires the candidate's session cookie. For a Lawyer running in the same trusted application process, use the case-building functions with the authenticated candidate context. For a separate service, agree with Dhruva on a service-authenticated, case-scoped handoff before sending resume text or project evidence. Do not reuse a candidate's browser cookie as a service credential.
+
+## Branches and integration order (November 13)
+
+- `agent/dhruva/depth-integration` is draft PR #3. It provides the profile links, selected-project case bundle, track-specific Depth rubric, and the website display.
+- `agent/rishi/swe-intern-data` provides 60 **synthetic SWE** applications, a fixture-specific keyword Paralegal extractor, and a separate Lawyer citation-verification experiment. The simulated `demo_labels` are calibration data only and must not enter the runtime evidence bundle.
+- `agent/harsh/lawyers-prototype` provides the two local Ollama Lawyers and a `--case` mode that reads the versioned case bundle. It validates citation IDs and distinguishes candidate claims from inspected artifacts. It is a CLI prototype, not a web endpoint or Judge.
+
+These three branches merged without conflicts in a disposable local worktree. The combined backend suite passed 29 tests, Rishi's `google-01` extractor ran, and Harsh's case preview ran. A separate adapter smoke check passed a bundle from `backend.web.cases.hydrate_case` into Harsh's `case_inputs` and preserved a namespaced Depth citation. These checks did not run a live Codex evaluation, live Ollama review of an authenticated candidate, or a Judge verdict.
+
+Integrate in this order:
+
+1. Confirm Rishi's and Harsh's GitHub logins and their owned technical paths, then update the trusted ownership policy in an integration-reviewed PR. Open peer PRs from their existing branches; do not copy their commits into Dhruva's PR or bypass ownership checks.
+2. Review and merge draft PR #3, then rebase the peer PRs onto `main`. Merge Rishi's fixtures and Harsh's prototype with their authorship intact. Review Rishi's verifier with Harsh before adopting it; the current Lawyer prototype does not call it.
+3. In the trusted web backend, start a review only for an authenticated case. Pass the **same frozen case snapshot** to both Lawyers through a direct in-process adapter or a service-authenticated handoff. Run Ollama work outside the request thread, store status and cited output by case ID, and expose a candidate-authorized read endpoint. Keep mock, failed, and pending Depth assessments labeled unverified.
+4. Have Rishi and Harsh implement the Judge against the cited Lawyer output and original case snapshot. Require a separate eligibility determination, evidence-linked reasons, and an `unassessed` result when evidence is insufficient. Then add the review and verdict to the website under Dhruva's integration ownership.
+5. Use the SWE pool to test citation grounding and calibration, without treating simulated offers as real hiring ground truth. Add independently reviewed hardware and product examples before claiming all three tracks are calibrated.
+
+## Work for the jointly owned pipeline
+
+1. **Research and Paralegal:** Produce structured job requirements in the three-track shape in [API contracts](api-contracts.md). Extract resume/application claims with source locations. Keep candidate claims distinct from inspected project evidence and keep the application's synthetic outcome label out of runtime input. Rishi's `agent/rishi/swe-intern-data` branch contains 60 fictional Google/Walmart applications, simulated `demo_labels`, and a keyword evidence extractor. It is an unmerged development fixture, not a trained or validated hiring model.
+2. **Two Lawyers:** Give advocate and skeptical Lawyer the **same immutable case bundle** plus Paralegal findings. Each argument should name the relevant job requirement, make a bounded claim, and cite a bundle reference or explicitly say evidence is missing. A failed or unassessed Depth evaluation is an uncertainty, not a negative project grade. Both Lawyers may abstain.
+3. **Judge:** Weigh the cited arguments for one job and candidate. Keep eligibility separate from fit. Return a verdict with strengths, objections, skill/evidence gaps, confidence, and recommendations; use `pending` when evidence is insufficient. Do not interpret `depth_score` as a hiring probability. The product rubric remains provisional pending PM calibration.
+4. **Integration:** Connect the case bundle to the two Lawyers and Judge through a reviewed interface. Add the final verdict to the candidate experience only after the citations and authorization path are tested. Dhruva owns changes to the website, Depth, and shared contracts; request those changes through integration review rather than editing those components from a peer branch.
+
+## Local check and acceptance
+
+Run the two services as described in the [README](../README.md): Depth on port 8000, website on port 8010. Use `DEPTH_INTEGRATION_MODE=codex` for real local analysis; default `mock` leaves arbitrary projects unassessed. The Depth process needs a writable, authenticated Codex state directory; if a restricted session blocks its local state, follow the README's `DEPTH_CODEX_HOME` setup and rerun `mode=codex`. A controlled evaluator response verifies the Lawyer handoff but does not verify live Depth scoring. Complete a candidate profile, select a GitHub or website project, choose a role, and select **Assess selected projects**. Inspect the authenticated case response and its `project_assessments`, `citations`, and `preparation` fields.
+
+Before calling the pipeline integrated, verify: a CS candidate and job reach both Lawyers and Judge; GitHub and website URLs and contribution claims survive; every argument resolves to a source reference; claim-only and partial cases produce uncertainty rather than invented findings; one candidate cannot read another's case; and synthetic labels never enter a live verdict. Add HW and PM examples after the first CS path works. The three track calibration examples still require a human reviewer and date; none is currently labeled as human reviewed.

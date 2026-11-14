@@ -1,6 +1,6 @@
 # SC-HACK Career Intelligence
 
-An evidence-based project depth prototype for four career tracks. Read `AGENTS.md` before contributing.
+An evidence-based project depth prototype for HW, CS, and PM. Read `AGENTS.md` before contributing.
 
 ```sh
 python3 -m venv .venv
@@ -12,7 +12,18 @@ Open `/docs` for the API. Mock mode runs offline and labels its outputs. For liv
 
 To evaluate real evidence with your local ChatGPT sign-in and no API key, first run `codex login status` and confirm it says `Logged in using ChatGPT`. Then start the service and submit `mode=codex`. This runs `codex exec` locally with a read-only sandbox and structured output; it uses your Codex plan usage. Set `DEPTH_CODEX_MODEL` only if you want to override the CLI's default model. Do not expose this local service to the public internet.
 
-For a four-track mock demo, copy a synthetic `text` value from `backend/depth/fixtures.py` into the `project_text` form field, then submit its matching `answer` to question `Q1`. These examples are intentionally synthetic and have not been human reviewed. Arbitrary pasted claims remain unassessed in mock mode.
+The Depth process must be able to write to Codex's local state directory (`CODEX_HOME`, normally `~/.codex`) even when `codex exec --ephemeral` is used. If it reports a permission error, start Depth from a shell with access to your own writable Codex home. For a separate location, create a private directory, sign in there, and point Depth to it:
+
+```bash
+mkdir -p "$HOME/.codex-depth"
+CODEX_HOME="$HOME/.codex-depth" codex login
+CODEX_HOME="$HOME/.codex-depth" codex login status
+DEPTH_CODEX_HOME="$HOME/.codex-depth" .venv/bin/uvicorn backend.depth.api:app --port 8000
+```
+
+Run these commands as the same OS user that runs Depth. `DEPTH_CODEX_HOME` must already exist. Do not commit, share, or copy Codex authentication files. Harsh's controlled-response Lawyer handoff test verifies the handoff, but a fully live evaluation still requires a successful `mode=codex` Depth run in his environment.
+
+For a three-track mock demo, copy a synthetic `text` value from `backend/depth/fixtures.py` into the `project_text` form field, then submit its matching `answer` to question `Q1`. These examples are intentionally synthetic and have not been human reviewed. Arbitrary pasted claims remain unassessed in mock mode.
 
 Run `.venv/bin/pytest` for tests. The GitHub remote exists; branch protection has not been verified.
 
@@ -31,3 +42,9 @@ cd web && npm install && npm run build && cd ..
 Open `http://127.0.0.1:8010`. The seed command loads 13 synthetic accounts from `tests/web/fixtures/users/*.json` and leaves existing accounts untouched. All sample accounts use `DemoPass123!`. Start with `demo@orbit.local` for a completed mixed HW/CS profile, `taylor.pm@orbit.local` for PM, `jamie.resume@orbit.local` to resume at upload, or `devon.skills@orbit.local` to resume at skills. Each JSON includes its scenario and resume text where applicable; no real candidate data is included. New visitors can sign up with their own email. To develop the frontend, run `cd web && npm run dev` in a second terminal and open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8010.
 
 For Research integration, set `RESEARCH_JOBS_FILE` to a JSON array matching the job shape in `docs/api-contracts.md` before starting the API. Curated roles stay available when no file is configured. Run `.venv/bin/pytest tests/web` and `cd web && npm run build` to verify the website.
+
+## Selected-project Depth handoff
+
+Start the Depth service on port 8000 and the website on port 8010 in separate terminals. Set `DEPTH_INTEGRATION_MODE=codex` on the website process for real local evaluation, or `live` with an API credential; the default `mock` mode deliberately leaves arbitrary projects unassessed. `DEPTH_API_URL` defaults to `http://127.0.0.1:8000`. Sign in, import public GitHub or website projects, select up to five, open a role match, and choose **Assess selected projects**. The resulting case shows project findings and preparation topics. Its authenticated `GET /api/cases/{id}` response is the versioned, cited handoff for the jointly owned Paralegal, Lawyer, and Judge work. Those stages are not implemented by this branch, so this page does not show a hiring verdict.
+
+Rishi and Harsh's next integration steps, source rules, and acceptance checks are in [their handoff guide](docs/rishi-harsh-integration-handoff.md).

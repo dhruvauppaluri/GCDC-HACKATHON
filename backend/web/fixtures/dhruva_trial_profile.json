@@ -1,0 +1,61 @@
+{
+  "first_name": "Dhruva",
+  "last_name": "Uppaluri",
+  "resume_name": "Axo EE Intern résumé (sanitized seed)",
+  "resume_text": "PROFESSIONAL SUMMARY Electrical Engineering student focused on ASIC/SoC design, FPGA development, and digital hardware verification. Experienced in RTL design, formal verification, synthesis, timing analysis, and hardware validation using SystemVerilog. Developing AI-driven FPGA accelerators and neural signal processing hardware, with a strong interest in high-performance, power-efficient silicon design. EDUCATION University of California, Santa Cruz - BS Electrical Engineering September 2026 - June 2028 In Progress Coursework: Signals & Systems, Computer Systems & Assembly Language Planned: Introduction to VLSI Digital System Design, High-Speed Digital Design, Logic Design, Computer Architecture Las Positas College, Livermore, CA - AS Electrical Engineering August 2023 - May 2026 Certifications: Electronics Foundations: Semiconductor Devices(LinkedIn), University of Colorado, Boulder: Hardware Description Languages for FPGA Design(Coursera), Arm: Computer Architecture Essentials(In Progress - Coursera) PROJECTS NeuroSig | Ongoing Personal Project | Github - Neural Signal Processing ASIC & Edge AI ● Designed and verified a 32-channel SystemVerilog neural signal-processing pipeline featuring fixed-point IIR filters, spike detection, and event merging, achieving 100% detection recall with zero false positives on a seeded 1M-sample synthetic test. ● Developed three spatial localization algorithms, including beamforming-inspired estimation and template matching, achieving 42.4 µm median localization error across noisy synthetic recordings. ● Built a hybrid ASIC-to-edge AI architecture with packetized neural data streaming and machine-learning inference, achieving 90.4% visual-stimulus classification accuracy on held-out Neuropixels recordings. Malleable AI FPGA | Ongoing Personal Project | Github - Designing an FPGA system to automatically optimize and adapt its resources to different AI models and footprints ● Designed a Verilog accelerator and memory-system RTL integrating HBM routing, asynchronous clock-domain crossings, arbitration, buffering, and host interfaces for configurable AI workloads. ● Developed configurable INT8/INT32 compute and datapath architecture with tiled accumulation, ReLU, requantization, and ping-pong buffering across multiple accelerator configurations. ● Reduced an HBM bridge datapath from 6,310 to 586 LUTs (~91%) by restructuring variable-selection logic, improving synthesized resource efficiency while preserving functionality. Jane Street Protocol Emulator ASIC Challenge | Ongoing | Github - Developing a cycle-accurate protocol-emulator ASIC targeting IHP 130 nm tapeout. ● Architected and implemented a custom 16-instruction RTL processor controlling 8 bidirectional I/O pins, executing UART, SPI, and I²C protocols as loadable firmware ● Designed processor control/datapath logic and integrated a programmable INT8 hardware classifier using time-multiplexed arithmetic for resource-efficient event classification. EEG Brain Signal Controlled Rover | WeaveHacks 4(Hackathon) - Collaborated in a 4-person team to leverage a multi-agent LLM system, which utilizes edge inference to control a hand-built rover through EEG brain waves. ● Architected an EEG-to-rover pipeline translating Bluetooth brain-signal data into real-time motor commands using custom transistor motor-control circuits. ● Built a multi-agent AI pipeline that normalized EEG signals against user baselines, improving command-reading accuracy by >50%. SKILLS Electronic Microcontrollers/FPGAs: Altera Quartus Cyclone V, AMD Virtex UltraScale+ HBM VU47P, Arduino, ESP32 Software Tools: Altera Quartus, Xilinx Vivado, ModelSim, LTSpice, KiCAD, Fusion360, Solidworks, LaTeX AI Platforms/Tools: Cursor, Codex Programming/Protocols: SystemVerilog , SVA, Verilog, VHDL, Python, C++, MATLAB, I²C, UART, PWM, SPI Equipment: Power Supply, Oscilloscope, Digital Multimeter, Soldering, Breadboard Prototyping EXPERIENCE Lead Math Tutor, Mathnasium - Livermore, CA August 2024 – March 2026 ● Explained algebra, geometry, and calculus while managing multiple learning plans and coordinating with instructors.",
+  "interests": "ASIC, FPGA, digital verification, embedded systems, and software tools",
+  "target_tracks": [
+    "HW"
+  ],
+  "skills": {
+    "HW": {
+      "SystemVerilog": 1,
+      "FPGA": 1,
+      "digital design": 1,
+      "Python": 1,
+      "simulation": 1
+    }
+  },
+  "linkedin_url": "https://www.linkedin.com/in/dhruvauppaluri",
+  "github_url": "https://github.com/dhruvauppaluri",
+  "website_url": "https://dhruvauppaluri.github.io/",
+  "projects": [
+    {
+      "id": "github:dhruvauppaluri/Neurosig",
+      "source": "github",
+      "title": "NeuroSig",
+      "url": "https://github.com/dhruvauppaluri/Neurosig",
+      "summary": "Neural signal processing ASIC and edge AI",
+      "contribution": "Resume claim: designed and verified a 32-channel SystemVerilog neural signal pipeline.",
+      "selected": true
+    },
+    {
+      "id": "github:dhruvauppaluri/MalleableAI-FPGA",
+      "source": "github",
+      "title": "Malleable AI FPGA",
+      "url": "https://github.com/dhruvauppaluri/MalleableAI-FPGA",
+      "summary": "Configurable FPGA AI accelerator and memory system",
+      "contribution": "Resume claim: designed accelerator RTL and reduced an HBM bridge datapath LUT count.",
+      "selected": true
+    },
+    {
+      "id": "github:dhruvauppaluri/Dhruva-Uppaluri-JaneStreetASIC",
+      "source": "github",
+      "title": "Protocol Emulator ASIC",
+      "url": "https://github.com/dhruvauppaluri/Dhruva-Uppaluri-JaneStreetASIC",
+      "summary": "Cycle-accurate protocol emulator ASIC",
+      "contribution": "Resume claim: built a 16-instruction RTL processor for UART, SPI, and I2C control.",
+      "selected": true
+    },
+    {
+      "id": "resume:eeg-rover",
+      "source": "resume",
+      "title": "EEG Brain Signal Controlled Rover",
+      "url": "",
+      "summary": "Hackathon EEG-to-rover system with a four-person team",
+      "contribution": "Resume claim: architected the EEG-to-rover pipeline and built signal normalization.",
+      "selected": false
+    }
+  ],
+  "completed": true
+}

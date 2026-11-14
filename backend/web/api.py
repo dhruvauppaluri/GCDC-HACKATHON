@@ -1,7 +1,12 @@
 """Accounts, onboarding, profiles, and local demo jobs API."""
 import io
 import os
+from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event, Thread
+from urllib.error import URLError
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
@@ -11,12 +16,33 @@ from pypdf import PdfReader
 import httpx
 
 from .imports import import_github, import_website, validate_public_url
-from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, suggest_tracks
+from .cases import hydrate_case, start_depth
+from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
+from .review import review_inputs, run_review
+from .simplify_feed import SimplifyFeed, enrich_listing
 from .storage import Store
 
 DATA_DIR = Path(os.getenv("WEB_DATA_DIR", ".web-data"))
 store = Store(DATA_DIR / "app.sqlite3")
-app = FastAPI(title="SC-HACK Candidate Experience")
+review_pool = ThreadPoolExecutor(max_workers=2)
+feed = SimplifyFeed(DATA_DIR / "simplify-cache.json")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    stop = Event()
+    def refresh_loop():
+        while not stop.is_set():
+            feed.get()
+            stop.wait(300)
+    thread = Thread(target=refresh_loop, name="simplify-feed-refresh", daemon=True)
+    thread.start()
+    yield
+    stop.set()
+    thread.join(timeout=1)
+
+
+app = FastAPI(title="SC-HACK Candidate Experience", lifespan=lifespan)
 
 
 def current_user(request: Request):
@@ -63,6 +89,23 @@ class Links(BaseModel):
 
 class Selection(BaseModel):
     selected_ids: list[str]
+    contributions: dict[str, str] = Field(default_factory=dict)
+
+
+class ResumeProject(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    summary: str = Field(min_length=1, max_length=2000)
+
+
+class NewCase(BaseModel):
+    job_id: str = Field(min_length=1, max_length=120)
+
+
+class PastedJob(BaseModel):
+    description: str = Field(min_length=40, max_length=20_000)
+    title: str = Field(default="", max_length=120)
+    company: str = Field(default="", max_length=120)
+    track: str | None = None
 
 
 @app.middleware("http")
@@ -206,43 +249,66 @@ def import_projects(user=Depends(current_user)):
     p = user["profile"]
     if not p["github_url"] and not p["website_url"]:
         raise HTTPException(422, "Add a GitHub or website link first")
-    projects, errors = [], []
+    projects, errors, refreshed_sources = [], [], set()
     for field, importer in (("github_url", import_github), ("website_url", import_website)):
         if p[field]:
             try:
                 projects.extend(importer(p[field]))
+                refreshed_sources.add("github" if field == "github_url" else "website")
             except (ValueError, httpx.HTTPError, KeyError) as exc:
                 errors.append(f"{field}: {exc}")
-    if projects:
-        previous = {item["id"]: item["selected"] for item in p["projects"]}
+    if refreshed_sources:
+        previous = {item["id"]: item for item in p["projects"]}
         for item in projects:
-            item["selected"] = previous.get(item["id"], False)
+            old = previous.get(item["id"], {})
+            item["selected"] = old.get("selected", False)
+            item["contribution"] = old.get("contribution", "")
+        projects.extend(item for item in p["projects"] if item["source"] not in refreshed_sources)
         store.update_profile(user["id"], {"projects": projects})
-    return {"projects": projects if projects else p["projects"], "errors": errors}
+    return {"projects": projects if refreshed_sources else p["projects"], "errors": errors}
 
 
 @app.patch("/api/profile/projects")
 def select_projects(body: Selection, user=Depends(current_user)):
     valid = {item["id"] for item in user["profile"]["projects"]}
-    if any(id not in valid for id in body.selected_ids):
+    if any(id not in valid for id in body.selected_ids) or any(id not in valid for id in body.contributions):
         raise HTTPException(422, "Unknown project")
-    projects = [{**item, "selected": item["id"] in body.selected_ids} for item in user["profile"]["projects"]]
+    if any(len(text) > 2000 for text in body.contributions.values()):
+        raise HTTPException(422, "Contribution exceeds 2000 characters")
+    projects = [{**item, "selected": item["id"] in body.selected_ids, "contribution": body.contributions.get(item["id"], item.get("contribution", "")).strip()} for item in user["profile"]["projects"]]
     store.update_profile(user["id"], {"projects": projects})
     return {"projects": projects}
 
 
-@app.get("/api/profile/export")
-def export_profile(user=Depends(current_user)):
-    """Authenticated candidate payload for Research/Judge integration."""
+@app.post("/api/profile/resume-project")
+def add_resume_project(body: ResumeProject, user=Depends(current_user)):
+    if not user["profile"]["resume_text"]:
+        raise HTTPException(409, "Upload a resume first")
+    title, summary = body.title.strip(), body.summary.strip()
+    if not title or not summary:
+        raise HTTPException(422, "Project title and summary are required")
+    project = {"id": f"resume:{uuid4()}", "source": "resume", "title": title, "url": "", "summary": summary, "contribution": summary, "selected": False}
+    projects = [*user["profile"]["projects"], project]
+    store.update_profile(user["id"], {"projects": projects})
+    return {"project": project, "projects": projects}
+
+
+def candidate_export(user):
+    """Snapshot of candidate claims and selected project context."""
     p = user["profile"]
     return {
         "candidate_id": user["id"], "first_name": p["first_name"], "last_name": p["last_name"],
         "target_tracks": [TRACKS[t] for t in p["target_tracks"] if t in TRACKS],
         "interests": p["interests"], "resume_text": p["resume_text"],
         "skills": {TRACKS[t]: values for t, values in p["skills"].items() if t in TRACKS},
-        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title"}} for item in p["projects"] if item.get("selected")],
+        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title", "contribution"}} for item in p["projects"] if item.get("selected")],
         "links": {key: p[key] for key in ("linkedin_url", "github_url", "website_url")},
     }
+
+
+@app.get("/api/profile/export")
+def export_profile(user=Depends(current_user)):
+    return candidate_export(user)
 
 
 @app.get("/api/jobs/matches")
@@ -250,11 +316,117 @@ def matches(user=Depends(current_user)):
     if not user["profile"]["completed"]:
         raise HTTPException(409, "Complete your profile first")
     source = os.getenv("RESEARCH_JOBS_FILE")
+    feed_jobs, feed_status = feed.get()
     try:
-        jobs = load_jobs(Path(source) if source else None)
+        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
     except (ValueError, OSError) as exc:
         raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
-    return {"jobs": match_jobs(user["profile"], jobs)}
+    matched = match_jobs(user["profile"], jobs)
+    return {"jobs": matched[:40], "total_available": len(matched), "feed": feed_status}
+
+
+@app.post("/api/jobs/parse")
+def parse_pasted_job(body: PastedJob, user=Depends(current_user)):
+    try:
+        return parse_job_description(body.description, body.track, body.title, body.company)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.post("/api/jobs/pasted", status_code=201)
+def save_pasted_job(body: PastedJob, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    try:
+        job = parse_job_description(body.description, body.track, body.title, body.company)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    job = {key: value for key, value in job.items() if key != "inferred_track"}
+    job.update(job_id=f"pasted:{uuid4()}", source="pasted")
+    store.put_pasted_job(user["id"], job)
+    return {"job": match_jobs(user["profile"], [job])[0]}
+
+
+@app.post("/api/cases", status_code=202)
+def create_case(body: NewCase, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    selected = [item for item in user["profile"]["projects"] if item.get("selected")]
+    if not selected:
+        raise HTTPException(422, "Select at least one project first")
+    if len(selected) > 5:
+        raise HTTPException(422, "Select at most five projects")
+    source = os.getenv("RESEARCH_JOBS_FILE")
+    feed_jobs, _ = feed.get()
+    try:
+        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
+    except (ValueError, OSError) as exc:
+        raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
+    job = next((item for item in jobs if item["job_id"] == body.job_id), None)
+    if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
+        raise HTTPException(404, "Job is unavailable for this candidate")
+    if job.get("source") == "simplify":
+        job = enrich_listing(job)
+    projects = []
+    for project in selected:
+        try:
+            projects.append({"project": project, "evaluation_id": start_depth(project, job["track"])})
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            projects.append({"project": project, "evaluation_id": None, "start_error": f"Depth service unavailable: {exc}"})
+    case_id = str(uuid4())
+    store.put_case(case_id, user["id"], {"case_id": case_id, "candidate": candidate_export(user), "job": job, "projects": projects})
+    return {"case_id": case_id, "status": "pending" if any(item["evaluation_id"] for item in projects) else "partial"}
+
+
+@app.get("/api/cases/{case_id}")
+def get_case(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    return hydrate_case(case)
+
+
+@app.get("/api/cases/{case_id}/review-preview")
+def preview_case_review(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    bundle = hydrate_case(case)
+    if bundle["status"] == "pending":
+        raise HTTPException(409, "Project assessment is still running")
+    return review_inputs(bundle)
+
+
+def finish_case_review(case_id: str, inputs: dict):
+    try:
+        store.finish_review(case_id, result=run_review(inputs))
+    except (URLError, OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+        detail = "Ollama is unavailable. Start Ollama and pull the configured local model." if isinstance(exc, URLError) else str(exc)
+        store.finish_review(case_id, error=detail)
+
+
+@app.post("/api/cases/{case_id}/review", status_code=202)
+def start_case_review(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    current = store.get_review(case_id, user["id"])
+    if current:
+        return {"case_id": case_id, "status": current["status"]}
+    bundle = hydrate_case(case)
+    if bundle["status"] == "pending":
+        raise HTTPException(409, "Project assessment is still running")
+    inputs = review_inputs(bundle)
+    store.put_review(case_id, user["id"])
+    review_pool.submit(finish_case_review, case_id, inputs)
+    return {"case_id": case_id, "status": "pending"}
+
+
+@app.get("/api/cases/{case_id}/review")
+def get_case_review(case_id: str, user=Depends(current_user)):
+    if not store.get_case(case_id, user["id"]):
+        raise HTTPException(404, "Case not found")
+    return store.get_review(case_id, user["id"]) or {"status": "not_started", "result": None, "error": None}
 
 
 DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
