@@ -3,7 +3,8 @@ from fastapi.testclient import TestClient
 import pytest
 
 from backend.web import api, cases, review
-from backend.web.jobs import parse_job_description
+from data.fixtures.rishi import lawyers_grounded
+from backend.web.jobs import parse_job_description, match_jobs
 from backend.web.storage import Store
 
 
@@ -20,6 +21,110 @@ def test_parse_job_description_detects_track_and_allows_override():
     assert "SystemVerilog" in parsed["required_skills"]
     assert "Python" in parsed["preferred_skills"]
     assert parse_job_description(text, "product")["track"] == "product"
+
+
+def test_job_sections_and_alternatives_are_not_hard_requirements():
+    text = "Software engineering intern\nMinimum Qualifications:\nPython or Java\nPreferred Qualifications:\nSQL"
+    parsed = parse_job_description(text)
+    assert parsed["required_skills"] == ["Python or Java"]
+    assert parsed["preferred_skills"] == ["SQL"]
+    profile = {"target_tracks": ["CS"], "skills": {"CS": {"Java": 4}}, "projects": []}
+    match = match_jobs(profile, [{**parsed, "job_id": "alternative", "source": "pasted"}])[0]
+    assert match["matched_skills"] == ["Python or Java"]
+    assert match["skill_gaps"] == []
+
+
+def test_skill_in_job_overview_is_not_assumed_required():
+    parsed = parse_job_description("Python software intern. Build internal tools for the engineering team. Preferred Qualifications:\nSQL")
+    assert parsed["required_skills"] == []
+    assert parsed["preferred_skills"] == ["SQL"]
+
+
+def test_judge_needs_evidence_for_each_required_skill():
+    inputs = {"job": {"required_skills": ["Java", "SQL"]}, "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
+              "evidence": [{"id": "depth:e:E1", "source": "depth_repository", "location": "route.java",
+                            "excerpt": "Java shuttle planner"}]}
+    positive = {category: [] for category in review.lawyers.CATEGORIES}
+    negative = {category: [] for category in review.lawyers.CATEGORIES}
+    positive["projects"] = [{"text": "Implemented a Java shuttle planner and SQL queries.",
+                              "evidence_ids": ["depth:e:E1"], "kind": "artifact_evidence"}]
+    result = review.trial_judge(inputs, positive, negative)
+    assert result["verdict"] == "needs_more_evidence"
+    assert result["required_skill_evidence"] == [
+        {"requirement": "Java", "status": "artifact_supported", "evidence_ids": ["depth:e:E1"]},
+        {"requirement": "SQL", "status": "unknown", "evidence_ids": []},
+    ]
+
+
+def test_website_review_verifies_claims_before_judging(monkeypatch):
+    inputs = {"job": {"job_id": "j", "required_skills": ["SQL"]},
+              "requirements": [{"id": "required:1", "kind": "required", "text": "SQL"}],
+              "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
+              "evidence": [{"id": "depth:e:E1", "source": "depth_repository", "location": "route.java",
+                            "excerpt": "Java shuttle planner"}]}
+    calls = []
+    def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
+        result = {category: [] for category in review.lawyers.CATEGORIES}
+        if role == "positive":
+            result["projects"] = [{"text": "Demonstrated SQL", "evidence_ids": ["depth:e:E1"],
+                                   "kind": "artifact_evidence"}]
+        return result
+    def fake_verify(payload):
+        calls.append(payload)
+        return {"0": False}
+    monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    monkeypatch.setattr(lawyers_grounded, "chat", fake_verify)
+    result = review.run_review(inputs)
+    assert len(calls) == 1
+    assert result["lawyers"]["positive"]["projects"][0]["kind"] == "unknown"
+    assert result["judge"]["strengths"] == []
+    assert result["judge"]["verdict"] == "needs_more_evidence"
+
+
+def test_required_skill_claim_fails_even_if_model_verifier_approves(monkeypatch):
+    inputs = {"job": {"job_id": "j", "required_skills": ["SQL"]},
+              "requirements": [{"id": "required:1", "kind": "required", "text": "SQL"}],
+              "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
+              "evidence": [{"id": "depth:e:E1", "source": "depth_repository", "location": "route.java",
+                            "excerpt": "Java shuttle planner"}]}
+    def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
+        result = {category: [] for category in review.lawyers.CATEGORIES}
+        if role == "positive":
+            result["skills_required_knowledge"] = [{"text": "Demonstrated SQL",
+                                                     "evidence_ids": ["depth:e:E1"], "kind": "artifact_evidence"}]
+        return result
+    monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    monkeypatch.setattr(review, "verify_findings", lambda model, findings, requirements, evidence: findings)
+    result = review.run_review(inputs)
+    assert result["lawyers"]["positive"]["skills_required_knowledge"][0]["kind"] == "unknown"
+    assert result["judge"]["verdict"] == "needs_more_evidence"
+
+
+def test_project_citation_does_not_become_work_experience():
+    findings = {category: [] for category in review.lawyers.CATEGORIES}
+    findings["work_experience"] = [{"text": "Built a route planner as work experience.",
+                                    "evidence_ids": ["profile:project:1", "paralegal:1"],
+                                    "kind": "supported_claim"}]
+    evidence = [{"id": "profile:project:1", "source": "resume_claim", "location": "project/p/summary", "excerpt": "Route planner"},
+                {"id": "paralegal:1", "source": "resume_claim", "location": "prior_experience", "excerpt": "Built a route planner"}]
+    assert review._keep_category_evidence(findings, evidence)["work_experience"] == []
+
+
+def test_pending_project_blocks_review_after_other_project_fails(client, monkeypatch):
+    client.post("/api/auth/signup", json={"email": "pending@example.com", "password": "DemoPass123!"})
+    user = api.store.user_for_session(client.cookies.get("sc_session"))
+    case_id = "mixed-depth-status"
+    api.store.put_case(case_id, user["id"], {
+        "case_id": case_id, "candidate": {"candidate_id": user["id"], "resume_text": "", "skills": {}},
+        "job": {"job_id": "test", "required_skills": ["Python"]},
+        "projects": [{"project": {"id": "failed"}, "evaluation_id": "e1"},
+                     {"project": {"id": "running"}, "evaluation_id": "e2"}],
+    })
+    monkeypatch.setattr(cases, "get_depth", lambda key: {"status": "failed" if key == "e1" else "running",
+                                                        "result": None, "error": None})
+    assert client.get(f"/api/cases/{case_id}").json()["status"] == "pending"
+    assert client.get(f"/api/cases/{case_id}/review-preview").status_code == 409
+    assert client.post(f"/api/cases/{case_id}/review").status_code == 409
 
 
 def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
@@ -57,6 +162,7 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     assert any(item["id"] == "depth:evaluation-1:E1" for item in preview.json()["evidence"])
 
     monkeypatch.setattr(api.review_pool, "submit", lambda fn, *args: fn(*args))
+    monkeypatch.setattr(review, "verify_findings", lambda model, findings, requirements, evidence: findings)
     def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
         empty = {category: [] for category in review.lawyers.CATEGORIES}
         if role == "positive":
@@ -66,7 +172,7 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     assert client.post(f"/api/cases/{case_id}/review").status_code == 202
     result = client.get(f"/api/cases/{case_id}/review").json()
     assert result["status"] == "complete"
-    assert result["result"]["judge"]["verdict"] == "promising_match"
+    assert result["result"]["judge"]["verdict"] == "needs_more_evidence"
     assert result["result"]["categories"]["projects"]["pluses"][0]["evidence_ids"] == ["depth:evaluation-1:E1"]
 
     client.post("/api/auth/logout")
@@ -84,3 +190,4 @@ def test_ollama_depth_result_reaches_lawyers_without_relabeling_output():
     assert inputs["actual_depth_modes"] == ["ollama"]
     assert inputs["depth_projects"][0]["dimensions"]["verification"]["evidence_ids"] == ["depth:e1:E1"]
     assert bundle["project_assessments"][0]["result"]["evaluation_mode"] == "ollama"
+
