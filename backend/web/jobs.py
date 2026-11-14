@@ -25,7 +25,7 @@ SUGGESTIONS = {
 
 SKILL_OPTIONS = {
     "HW": ["SystemVerilog", "FPGA", "digital design", "C", "embedded systems", "electronics", "PCB design", "schematics", "Altium", "simulation", "Python", "testing"],
-    "CS": ["Python", "TypeScript", "React", "CSS", "APIs", "SQL", "C++", "Linux", "algorithms", "testing", "distributed systems"],
+    "CS": ["Python", "Java", "TypeScript", "React", "CSS", "APIs", "SQL", "C++", "Linux", "algorithms", "testing", "distributed systems"],
     "PM": ["user research", "prioritization", "analytics", "SQL", "roadmapping", "product strategy", "technical communication", "APIs", "stakeholder management", "metrics", "experimentation"],
 }
 
@@ -36,6 +36,11 @@ TRACK_TERMS = {
 }
 
 
+def skill_alternatives(requirement: str) -> list[str]:
+    """A requirement such as 'Python or Java' needs one of its options."""
+    return [part.strip() for part in re.split(r"\s+or\s+", requirement, flags=re.I) if part.strip()]
+
+
 def parse_job_description(description: str, track: str | None = None, title: str = "", company: str = "") -> dict:
     """Extract a reviewable job draft; the original description remains authoritative."""
     description = description.strip()
@@ -43,7 +48,9 @@ def parse_job_description(description: str, track: str | None = None, title: str
         raise ValueError("Paste a job description between 40 and 20,000 characters")
     if track is not None and track not in TRACK_TERMS:
         raise ValueError("Choose hardware, software, or product")
-    lines = [line.strip(" \t•-*–") for line in description.splitlines() if line.strip()]
+    sectioned = re.sub(r"(?<=[.!?])\s+(?=(?:preferred|minimum|required|basic|nice[- ]to[- ]have|bonus)\b[^:\n]{0,30}:)",
+                       "\n", description, flags=re.I)
+    lines = [line.strip(" \t•-*–") for line in sectioned.splitlines() if line.strip()]
     first_phrase = re.split(r"[.!?]\s+", lines[0], maxsplit=1)[0]
     heading = title.strip() or next((line for line in [first_phrase, *lines[:3]] if len(line) <= 120), "Pasted role")
     text = (heading + " " + description).casefold()
@@ -51,13 +58,35 @@ def parse_job_description(description: str, track: str | None = None, title: str
     inferred = max(scores, key=scores.get) if max(scores.values()) else "software"
     chosen = track or inferred
     known = list(dict.fromkeys(skill for skill in SKILL_OPTIONS[{"hardware": "HW", "software": "CS", "product": "PM"}[chosen]]))
-    # Longer names win before short aliases such as C and SQL.
-    found = [skill for skill in sorted(known, key=len, reverse=True) if re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", description, re.I)]
-    preferred_text = " ".join(match.group(1) for match in re.finditer(
-        r"(?:preferred|nice to have|bonus)\s*:?\s*([^\n]+)", description, re.I,
-    ))
-    preferred = [skill for skill in found if re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", preferred_text, re.I)]
-    required = [skill for skill in found if skill not in preferred]
+    required, preferred = [], []
+    section = "context"
+    heading_pattern = re.compile(r"^(preferred|minimum|required|basic|nice[- ]to[- ]have|bonus)(?:\s+(?:qualifications|skills|requirements))?\s*:?\s*$", re.I)
+    inline_pattern = re.compile(r"^(preferred|minimum|required|basic|nice[- ]to[- ]have|bonus)(?:\s+(?:qualifications|skills|requirements))?\s*:\s*(.+)$", re.I)
+    for line in lines:
+        if match := heading_pattern.fullmatch(line):
+            section = "preferred" if match.group(1).casefold() in {"preferred", "nice to have", "nice-to-have", "bonus"} else "required"
+            continue
+        if match := inline_pattern.match(line):
+            section = "preferred" if match.group(1).casefold() in {"preferred", "nice to have", "nice-to-have", "bonus"} else "required"
+            line = match.group(2)
+        # Prefer long terms so 'C' cannot also match the beginning of 'C++'.
+        spans = []
+        for skill in sorted(known, key=len, reverse=True):
+            for match in re.finditer(r"(?<!\w)" + re.escape(skill) + r"(?![\w+])", line, re.I):
+                if not any(match.start() < end and start < match.end() for start, end, _ in spans):
+                    spans.append((match.start(), match.end(), skill))
+        spans.sort()
+        groups = []
+        for start, end, skill in spans:
+            if groups and re.fullmatch(r"\s+or\s+", line[groups[-1][-1][1]:start], re.I):
+                groups[-1].append((start, end, skill))
+            else:
+                groups.append([(start, end, skill)])
+        if section != "context":
+            destination = preferred if section == "preferred" else required
+            destination.extend(" or ".join(item[2] for item in group) for group in groups)
+    required = list(dict.fromkeys(required))
+    preferred = [skill for skill in dict.fromkeys(preferred) if skill not in required]
     return {
         "track": chosen, "inferred_track": inferred, "title": heading[:120],
         "company": company.strip()[:120] or "Pasted job", "description": description,
@@ -113,10 +142,11 @@ def match_jobs(profile: dict, jobs: list[dict]):
         preferred = [str(s) for s in job.get("preferred_skills", [])]
         title_only = job.get("source") == "simplify" and job.get("description_status") == "listing_only"
         signals = [str(s) for s in job.get("title_signals", [])] if title_only else required + preferred
-        matched = [s for s in signals if s.casefold() in skill_names]
-        gaps = [s for s in required if s.casefold() not in skill_names]
-        project_context = [p["title"] for p in selected_projects if any(s.casefold() in (p.get("title", "") + " " + p.get("summary", "")).casefold() for s in signals)][:2]
+        matched = [s for s in signals if any(option.casefold() in skill_names for option in skill_alternatives(s))]
+        gaps = [s for s in required if not any(option.casefold() in skill_names for option in skill_alternatives(s))]
+        project_context = [p["title"] for p in selected_projects if any(option.casefold() in (p.get("title", "") + " " + p.get("summary", "")).casefold() for s in signals for option in skill_alternatives(s))][:2]
         source = job.get("source") or ("curated" if job["job_id"] in {j["job_id"] for j in SEED_JOBS} else "research")
         result.append({**job, "matched_skills": matched, "skill_gaps": gaps, "project_context": project_context, "source": source,
                        "screening": lightweight_screen(matched, gaps, project_context, title_only=title_only)})
     return sorted(result, key=lambda j: (j["source"] != "pasted", -len(j["matched_skills"]), -len(j["project_context"]), len(j["skill_gaps"]), -int(j.get("date_posted") or 0), j["title"]))
+
