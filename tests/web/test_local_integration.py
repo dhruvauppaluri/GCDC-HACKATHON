@@ -66,7 +66,8 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     assert client.post(f"/api/cases/{case_id}/review").status_code == 202
     result = client.get(f"/api/cases/{case_id}/review").json()
     assert result["status"] == "complete"
-    assert result["result"]["judge"]["verdict"] == "promising_match"
+    assert result["result"]["judge"]["match_score"] is not None
+    assert result["result"]["judge"]["requirements"]
     assert result["result"]["categories"]["projects"]["pluses"][0]["evidence_ids"] == ["depth:evaluation-1:E1"]
 
     client.post("/api/auth/logout")

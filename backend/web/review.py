@@ -7,6 +7,8 @@ import re
 from data.fixtures.rishi.swe_paralegal import extract
 from prototypes.harsh.lawyers import lawyers
 from .jobs import SKILL_OPTIONS
+from .judge import judge_case
+from .gemini_lawyer import review_with_gemini
 
 
 def synthetic_comparisons(signals: set[str]) -> list[dict]:
@@ -31,8 +33,8 @@ def review_inputs(bundle: dict) -> dict:
     depth_modes = []
     for assessment in lawyer_bundle.get("project_assessments", []):
         result = assessment.get("result") or {}
-        if result.get("evaluation_mode") == "ollama":
-            depth_modes.append("ollama")
+        if result.get("evaluation_mode") in {"ollama", "gemini"}:
+            depth_modes.append(result["evaluation_mode"])
             result["evaluation_mode"] = "live"
         elif result.get("evaluation_mode"):
             depth_modes.append(result["evaluation_mode"])
@@ -79,36 +81,20 @@ def review_inputs(bundle: dict) -> dict:
     }
 
 
-def trial_judge(inputs: dict, positive: dict, negative: dict) -> dict:
-    """Conservative local integration placeholder until the shared Judge exists."""
-    categories = lawyers.CATEGORIES
-    strengths = [point for category in categories for point in positive[category]]
-    objections = [point for category in categories for point in negative[category]]
-    confirmed_gaps = [point for point in objections if point["kind"] == "gap"]
-    verified_projects = any(project.get("dimensions") for project in inputs["depth_projects"])
-    if inputs["job"].get("description_status") == "listing_only":
-        verdict = "needs_job_description"
-    else:
-        verdict = "review_required" if confirmed_gaps else "promising_match" if strengths and verified_projects else "needs_more_evidence"
-    return {
-        "version": "local-trial-v1", "verdict": verdict,
-        "eligibility": "unknown" if inputs["job"].get("eligibility_requirements") else "not_specified",
-        "strengths": strengths, "objections": objections,
-        "confidence": "medium" if verified_projects and strengths else "low",
-        "note": "Provisional integration summary. The jointly owned Judge is not implemented or calibrated yet; this is not a hiring decision.",
-    }
-
-
 def run_review(inputs: dict) -> dict:
-    model = os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
+    provider = os.getenv("LAWYER_PROVIDER", "ollama").casefold()
+    if provider not in {"ollama", "gemini"}:
+        raise ValueError("LAWYER_PROVIDER must be ollama or gemini")
+    model = os.getenv("LAWYER_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-2.5-flash")) if provider == "gemini" else os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
-    positive = lawyers.review_with_ollama(model, "positive", requirements, evidence, depth_projects)
+    review_lawyer = (lambda role, previous=None: review_with_gemini(role, requirements, evidence, depth_projects, previous)) if provider == "gemini" else (lambda role, previous=None: lawyers.review_with_ollama(model, role, requirements, evidence, depth_projects, previous))
+    positive = review_lawyer("positive")
     negative = lawyers.clean_negative(
-        lawyers.review_with_ollama(model, "negative", requirements, evidence, depth_projects, positive),
+        review_lawyer("negative", positive),
         positive, requirements,
     )
     return {
-        "model": model, "lawyers": {"positive": positive, "negative": negative},
+        "provider": provider, "model": model, "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
-        "judge": trial_judge(inputs, positive, negative),
+        "judge": judge_case(inputs, positive, negative),
     }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import JobDescriptionPage from './JobDescriptionPage'
 import ReviewPanel from './ReviewPanel'
+import type { ReviewState, ReviewPreview } from './ReviewPanel'
 import './style.css'
 
 type Track = 'HW' | 'CS' | 'PM'
@@ -12,9 +13,6 @@ type Job = { job_id: string; track: string; title: string; company: string; requ
 type Options = { tracks: Record<Track, string>; skill_options: Record<Track, string[]> }
 type DepthResult = { depth_score: number | null; confidence: string; project_summary: string; dimensions: Record<string, { score: number; evidence_ids: string[] } | null>; criteria: Record<string, string>; demonstrated_skills: { skill: string; evidence_ids: string[] }[]; limitations: string[]; evaluation_mode: string }
 type CaseBundle = { case_id: string; status: string; job: Job; project_assessments: { project: Project; status: string; result: DepthResult | null; error: string | null }[]; preparation: { required_skills_with_project_evidence: string[]; required_skills_without_project_evidence: string[]; questions: { project_id: string; id: string; question: string }[] } }
-type ReviewPoint = { text: string; evidence_ids: string[]; kind: string }
-type ReviewState = { status: string; error: string | null; result: { categories: Record<string, { pluses: ReviewPoint[]; minuses: ReviewPoint[] }>; judge: { verdict: string; eligibility: string; confidence: string; note: string } } | null }
-type ReviewPreview = { paralegal: { source: string; evidence: { signal: string; quote: string }[] } | null; synthetic_comparisons: { application_id: string; shared_claim_signals: string[]; example_project: string }[]; requirements: { text: string; kind: string }[] }
 
 async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const response = await fetch(path, { method, credentials: 'same-origin', headers: body instanceof FormData ? undefined : body === undefined ? undefined : { 'Content-Type': 'application/json' }, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body) })
