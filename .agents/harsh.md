@@ -32,4 +32,3 @@
 - Fixed: required-skill evidence gate in the provisional Judge, section-aware job parsing with `or` alternatives, Rishi's citation verifier in the website review path plus a literal required-skill citation guard, and review waiting while any selected Depth assessment runs.
 - Verification: 41 backend tests and frontend build passed; local Ollama Depth and Lawyer smoke completed; a live SQL-versus-route-project case returned `needs_more_evidence` with SQL unknown.
 - Pending: review of these shared integration changes, real résumé/browser rehearsal, and calibration of the provisional Judge and evidence verifier.
-
