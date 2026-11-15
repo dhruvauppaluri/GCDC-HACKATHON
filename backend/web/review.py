@@ -4,10 +4,11 @@ import json
 from pathlib import Path
 import re
 
-from data.fixtures.rishi.swe_paralegal import extract
 from data.fixtures.rishi.lawyers_grounded import verify_findings
 from prototypes.harsh.lawyers import lawyers
-from .jobs import SKILL_OPTIONS, skill_alternatives
+from .jobs import skill_alternatives
+from .paralegal import extract_facts
+from .judge import rate as rate_evidence
 
 
 def synthetic_comparisons(signals: set[str]) -> list[dict]:
@@ -38,44 +39,13 @@ def review_inputs(bundle: dict) -> dict:
         elif result.get("evaluation_mode"):
             depth_modes.append(result["evaluation_mode"])
     candidate, job, evidence, depth_projects = lawyers.case_inputs(lawyer_bundle)
-    paralegal = None
-    comparisons = []
-    if job.get("track") == "software":
-        project_claims = [
-            text for assessment in bundle.get("project_assessments", [])
-            for text in (assessment["project"].get("summary", ""), assessment["project"].get("contribution", ""))
-            if text
-        ]
-        paralegal = extract({
-            "id": candidate["candidate_id"], "company": job.get("company", ""),
-            "role": job.get("title", ""),
-            "application": {"education": "", "coursework": "", "projects": project_claims,
-                            "prior_experience": [line.strip() for line in candidate.get("resume_text", "").splitlines() if line.strip()]},
-        })
-        paralegal["source"] = "rishi_swe_extractor"
-        comparisons = synthetic_comparisons({item["signal"] for item in paralegal["evidence"]})
-    else:
-        track = {"hardware": "HW", "product": "PM"}.get(job.get("track"))
-        lines = candidate.get("resume_text", "").splitlines()
-        signals = []
-        for skill in SKILL_OPTIONS.get(track, []):
-            found = next((line.strip() for line in lines if re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", line, re.I)), None)
-            if found:
-                signals.append({"signal": skill, "terms": [skill], "field": "resume", "quote": found})
-        paralegal = {"id": candidate["candidate_id"], "source": "local_track_terms", "evidence": signals}
-    if paralegal:
-        for index, item in enumerate(paralegal["evidence"], 1):
-            evidence.append({
-                "id": f"paralegal:{index}", "source": "resume_claim",
-                "location": item["field"], "excerpt": item["quote"],
-                "signal": item["signal"], "terms": item["terms"],
-            })
+    paralegal = {"source": "pending_model_extraction", "evidence": []}
     return {
         "case_id": bundle["case_id"], "candidate_id": candidate["candidate_id"],
         "job_id": job["job_id"], "job": job,
         "requirements": lawyers.job_requirements(job),
         "evidence": evidence, "depth_projects": depth_projects,
-        "paralegal": paralegal, "synthetic_comparisons": comparisons,
+        "paralegal": paralegal, "synthetic_comparisons": [],
         "actual_depth_modes": depth_modes,
     }
 
@@ -88,6 +58,8 @@ def trial_judge(inputs: dict, positive: dict, negative: dict) -> dict:
     confirmed_gaps = [point for point in objections if point["kind"] == "gap"]
     verified_projects = any(project.get("dimensions") for project in inputs["depth_projects"])
     evidence = {item["id"]: item for item in inputs["evidence"]}
+    rating = rate_evidence(inputs.get("requirements") or lawyers.job_requirements(inputs["job"]),
+                           positive, negative, inputs["evidence"], _mentions_skill)
     requirement_support = []
     for requirement in inputs["job"].get("required_skills", []):
         supporting = []
@@ -112,6 +84,7 @@ def trial_judge(inputs: dict, positive: dict, negative: dict) -> dict:
         "version": "local-trial-v1", "verdict": verdict,
         "eligibility": "unknown" if inputs["job"].get("eligibility_requirements") else "not_specified",
         "strengths": strengths, "objections": objections, "required_skill_evidence": requirement_support,
+        "evidence_rating": rating,
         "confidence": "medium" if verdict == "promising_match" else "low",
         "note": "Provisional integration summary. The jointly owned Judge is not implemented or calibrated yet; this is not a hiring decision.",
     }
@@ -158,6 +131,14 @@ def _ground_required_skill_claims(review: dict, requirements: list[dict], eviden
 
 def run_review(inputs: dict) -> dict:
     model = os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
+    paralegal = extract_facts(inputs["evidence"])
+    inputs = {**inputs, "paralegal": paralegal}
+    # Pass the exact source spans to the Lawyers. The original sources remain available.
+    inputs["evidence"] = [*inputs["evidence"], *(
+        {"id": f"paralegal:{index}", "source": "resume_claim",
+         "location": next(item["location"] for item in inputs["evidence"] if item["id"] == fact["source_id"]),
+         "excerpt": fact["quote"], "source_id": fact["source_id"], "category": fact["category"]}
+        for index, fact in enumerate(paralegal["evidence"], 1))]
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
     positive = _keep_category_evidence(_ground_required_skill_claims(verify_findings(model,
         lawyers.review_with_ollama(model, "positive", requirements, evidence, depth_projects),
@@ -169,7 +150,7 @@ def run_review(inputs: dict) -> dict:
         positive, requirements,
     )
     return {
-        "model": model, "lawyers": {"positive": positive, "negative": negative},
+        "model": model, "paralegal": paralegal, "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
         "judge": trial_judge(inputs, positive, negative),
     }

@@ -1,11 +1,74 @@
 """Local trial: pasted jobs, claim extraction, Depth citations, and the review handoff."""
 from fastapi.testclient import TestClient
+import json
 import pytest
 
 from backend.web import api, cases, review
+from backend.web import paralegal
+from backend.web.judge import rate
 from data.fixtures.rishi import lawyers_grounded
 from backend.web.jobs import parse_job_description, match_jobs
 from backend.web.storage import Store
+
+
+def test_paralegal_extracts_only_exact_cited_spans(monkeypatch):
+    sources = [{"id": "profile:resume", "source": "resume_claim", "location": "resume_text",
+                "excerpt": "Built a Java route planner. Tested disconnected stops."}]
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def read(self, *args): return json.dumps({"message": {"content": json.dumps({"facts": [
+            {"source_id": "profile:resume", "quote": "Built a Java route planner", "category": "project"}
+        ]})}}).encode()
+    monkeypatch.setattr(paralegal, "urlopen", lambda *args, **kwargs: Response())
+    result = paralegal.extract_facts(sources)
+    assert result["evidence"] == [{"source_id": "profile:resume", "quote": "Built a Java route planner", "category": "project"}]
+
+
+def test_judge_rating_keeps_unknowns_out_of_exact_score():
+    reqs = [{"id": "required:1", "kind": "required", "text": "Java"},
+            {"id": "required:2", "kind": "required", "text": "SQL"},
+            {"id": "preferred:1", "kind": "preferred", "text": "Python"}]
+    evidence = [{"id": "depth:1", "source": "depth_repository", "excerpt": "Java route planner"},
+                {"id": "resume:1", "source": "resume_claim", "excerpt": "Python coursework"}]
+    positive = {category: [] for category in review.lawyers.CATEGORIES}
+    negative = {category: [] for category in review.lawyers.CATEGORIES}
+    positive["projects"] = [{"kind": "artifact_evidence", "text": "Built a Java route planner", "evidence_ids": ["depth:1"]}]
+    positive["skills_required_knowledge"] = [{"kind": "supported_claim", "text": "Studied Python", "evidence_ids": ["resume:1"]}]
+    result = rate(reqs, positive, negative, evidence, review._mentions_skill)
+    assert result["score"] is None
+    assert result["score_range"] == [50, 94]
+    assert [row["status"] for row in result["requirements"]] == ["artifact_supported", "unknown", "claimed"]
+
+
+def test_paralegal_rejects_fabricated_quote(monkeypatch):
+    sources = [{"id": "profile:resume", "source": "resume_claim", "location": "resume_text", "excerpt": "Java route planner"}]
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def read(self, *args): return json.dumps({"message": {"content": json.dumps({"facts": [
+            {"source_id": "profile:resume", "quote": "SQL database", "category": "skill"}
+        ]})}}).encode()
+    monkeypatch.setattr(paralegal, "urlopen", lambda *args, **kwargs: Response())
+    with pytest.raises(ValueError, match="absent"):
+        paralegal.extract_facts(sources)
+
+
+def test_review_passes_paralegal_facts_to_both_lawyers(monkeypatch):
+    inputs = {"job": {"job_id": "j", "required_skills": []}, "requirements": [], "depth_projects": [],
+              "evidence": [{"id": "profile:resume", "source": "resume_claim", "location": "resume_text", "excerpt": "Built an API"}]}
+    monkeypatch.setattr(review, "extract_facts", lambda evidence: {"source": "ollama_paralegal", "evidence": [
+        {"source_id": "profile:resume", "quote": "Built an API", "category": "project"}]})
+    seen = []
+    def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
+        seen.append((role, [item for item in evidence if item["id"].startswith("paralegal:")]))
+        return {category: [] for category in review.lawyers.CATEGORIES}
+    monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    monkeypatch.setattr(review, "verify_findings", lambda model, findings, requirements, evidence: findings)
+    result = review.run_review(inputs)
+    assert [role for role, _ in seen] == ["positive", "negative"]
+    assert all(items[0]["excerpt"] == "Built an API" for _, items in seen)
+    assert result["paralegal"]["source"] == "ollama_paralegal"
 
 
 @pytest.fixture
@@ -57,6 +120,7 @@ def test_judge_needs_evidence_for_each_required_skill():
 
 
 def test_website_review_verifies_claims_before_judging(monkeypatch):
+    monkeypatch.setattr(review, "extract_facts", lambda evidence: {"source": "ollama_paralegal", "evidence": []})
     inputs = {"job": {"job_id": "j", "required_skills": ["SQL"]},
               "requirements": [{"id": "required:1", "kind": "required", "text": "SQL"}],
               "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
@@ -82,6 +146,7 @@ def test_website_review_verifies_claims_before_judging(monkeypatch):
 
 
 def test_required_skill_claim_fails_even_if_model_verifier_approves(monkeypatch):
+    monkeypatch.setattr(review, "extract_facts", lambda evidence: {"source": "ollama_paralegal", "evidence": []})
     inputs = {"job": {"job_id": "j", "required_skills": ["SQL"]},
               "requirements": [{"id": "required:1", "kind": "required", "text": "SQL"}],
               "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
@@ -157,11 +222,11 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     case_id = client.post("/api/cases", json={"job_id": job_id}).json()["case_id"]
     preview = client.get(f"/api/cases/{case_id}/review-preview")
     assert preview.status_code == 200
-    assert preview.json()["paralegal"]["evidence"]
-    assert preview.json()["synthetic_comparisons"]
+    assert preview.json()["paralegal"]["source"] == "pending_model_extraction"
     assert any(item["id"] == "depth:evaluation-1:E1" for item in preview.json()["evidence"])
 
     monkeypatch.setattr(api.review_pool, "submit", lambda fn, *args: fn(*args))
+    monkeypatch.setattr(review, "extract_facts", lambda evidence: {"source": "ollama_paralegal", "evidence": []})
     monkeypatch.setattr(review, "verify_findings", lambda model, findings, requirements, evidence: findings)
     def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
         empty = {category: [] for category in review.lawyers.CATEGORIES}

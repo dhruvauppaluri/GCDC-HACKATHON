@@ -32,3 +32,15 @@
 - Fixed: required-skill evidence gate in the provisional Judge, section-aware job parsing with `or` alternatives, Rishi's citation verifier in the website review path plus a literal required-skill citation guard, and review waiting while any selected Depth assessment runs.
 - Verification: 41 backend tests and frontend build passed; local Ollama Depth and Lawyer smoke completed; a live SQL-versus-route-project case returned `needs_more_evidence` with SQL unknown.
 - Pending: review of these shared integration changes, real résumé/browser rehearsal, and calibration of the provisional Judge and evidence verifier.
+
+## Model-backed Paralegal trial
+
+- Scope: `backend/web/paralegal.py`, review integration, and website review display on `agent/harsh/integration-fixes` for integration review.
+- Extracts candidate-reported facts through local Ollama, requiring each returned quote to be an exact span of a cited source. Both Lawyers receive these spans; unsupported quotations fail the review rather than becoming evidence.
+- Verification: seven targeted backend checks and the frontend TypeScript/Vite build passed. Live Ollama was unavailable in this environment, so model behavior still needs a local smoke test.
+
+## Judge evidence rating trial
+
+- Scope: `backend/web/judge.py`, the provisional review result, and website display.
+- Adds a role-specific 0–100 evidence coverage rubric. Required requirements carry four times preferred weight; artifact evidence, candidate claims, explicit gaps, and unknowns remain distinct. Unknowns produce a range rather than a false exact score.
+- Verification: eight targeted backend checks and the TypeScript/Vite build passed. The numeric rubric is a prototype and has not been calibrated against human judgments.
