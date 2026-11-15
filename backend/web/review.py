@@ -85,7 +85,7 @@ def run_review(inputs: dict) -> dict:
     provider = os.getenv("LAWYER_PROVIDER", "ollama").casefold()
     if provider not in {"ollama", "gemini"}:
         raise ValueError("LAWYER_PROVIDER must be ollama or gemini")
-    model = os.getenv("LAWYER_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-2.5-flash")) if provider == "gemini" else os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
+    model = os.getenv("LAWYER_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")) if provider == "gemini" else os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
     review_lawyer = (lambda role, previous=None: review_with_gemini(role, requirements, evidence, depth_projects, previous)) if provider == "gemini" else (lambda role, previous=None: lawyers.review_with_ollama(model, role, requirements, evidence, depth_projects, previous))
     positive = review_lawyer("positive")

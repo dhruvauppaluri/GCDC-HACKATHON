@@ -51,7 +51,7 @@ Open `http://127.0.0.1:8010` and use the generated local login. The seed does no
 
 ## Optional Gemini provider
 
-Gemini is opt-in. Set `GEMINI_API_KEY` in the relevant server process environment; never add it to the repository or the seed. For Depth, set `DEPTH_INTEGRATION_MODE=gemini` on the web process and optionally `DEPTH_GEMINI_MODEL` on the Depth process. For both Lawyers, set `LAWYER_PROVIDER=gemini` on the web process and optionally `LAWYER_GEMINI_MODEL`. Both default to `gemini-2.5-flash` when no model is specified. The Judge remains deterministic and does not call a model. Gemini sends the supplied job and candidate evidence to Google's API; Ollama keeps those model calls local. The Gemini transport and schema have mocked tests, but no live API-key run has been performed.
+Gemini is opt-in. Set `GEMINI_API_KEY` in the relevant server process environment; never add it to the repository or the seed. For Depth, set `DEPTH_INTEGRATION_MODE=gemini` on the web process and optionally `DEPTH_GEMINI_MODEL` on the Depth process. For both Lawyers, set `LAWYER_PROVIDER=gemini` on the web process and optionally `LAWYER_GEMINI_MODEL`. Both default to `gemini-3.5-flash-lite` when no model is specified. The Judge remains deterministic and does not call a model. Gemini sends the supplied job and candidate evidence to Google's API; Ollama keeps those model calls local. The Gemini transport and schema have mocked tests and a live synthetic pipeline check; a real candidate case has not been run with Gemini.
 
 ## Judge handoff for Rishi and Harsh
 
@@ -64,4 +64,4 @@ GitHub's unauthenticated API rate limit can interrupt analysis of several reposi
 - Local backend tests and the frontend build pass.
 - A real Codex run analyzed the NeuroSig GitHub repository through the pasted-job case. Other repository reads hit GitHub's anonymous rate limit and were marked failed in that case.
 - Rishi's extractor, Harsh's case input adapter, and a controlled two-Lawyer review were exercised in tests. No local Ollama server was available on the Mac, so a live Qwen Lawyer/Judge run remains for the Windows laptop.
-- A live Gemini connection check using a user-supplied key returned HTTP 402 before any model content was generated. Google's API error documentation identifies this as depleted prepay credits. No key was stored or committed. A live Gemini Depth/Lawyer review remains unverified until the associated project's billing is resolved or another usable key is configured.
+- The first user-supplied Gemini key returned HTTP 402 (depleted prepay credits). A second key succeeded with `gemini-3.5-flash-lite`: the structured-output client, a cited Lawyer review, the two-Lawyer-to-Judge pipeline, and a Depth assessment all completed on synthetic data. The older `gemini-2.5-flash-lite` model returned HTTP 404 for this key because it is unavailable to new users. No key was stored or committed. A live candidate case remains unverified.

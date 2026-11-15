@@ -11,7 +11,7 @@ import re
 import httpx
 
 
-_DEFAULT_MODEL = "gemini-2.5-flash"
+_DEFAULT_MODEL = "gemini-3.5-flash-lite"
 _MODEL_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
 
 
