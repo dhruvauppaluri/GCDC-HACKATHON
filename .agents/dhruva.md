@@ -5,10 +5,10 @@
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
 - Current task: Evidence-weighted Judge scoring and optional Gemini API provider on the local integration trial branch
-- Status: Judge score and requirement breakdown are wired into the local review page; Gemini Depth and Lawyer adapters have mocked tests
+- Status: Judge score and requirement breakdown are wired into the local review page; Gemini Depth and Lawyer adapters have mocked tests, and a live Gemini connection check returned HTTP 402 (prepay credits depleted)
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
 - Work in progress: Windows-ready Ollama and opt-in Gemini provider; live Qwen or Gemini Lawyers await a configured runtime, while one real Codex NeuroSig Depth evaluation completed locally
-- Next steps: calibrate the Judge with human-reviewed HW/CS/PM cases, run a live Ollama or Gemini review, validate original job-posting extraction, and hand the integration Judge to Rishi and Harsh for review
+- Next steps: calibrate the Judge with human-reviewed HW/CS/PM cases, run a live Ollama review or restore Gemini project billing before a Gemini review, validate original job-posting extraction, and hand the integration Judge to Rishi and Harsh for review
 - Expected inputs: one project, career track, public GitHub URL and/or written evidence, optional candidate answers
 - Expected outputs: cited project-depth assessment, questions, versioned revisions
 - Interfaces exposed: track-specific Depth HTTP API and authenticated website case bundle in `docs/api-contracts.md`; peer handoff in `docs/rishi-harsh-integration-handoff.md`

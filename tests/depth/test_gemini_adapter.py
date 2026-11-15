@@ -52,3 +52,11 @@ def test_gemini_quota_error_has_no_response_body(monkeypatch):
     with pytest.raises(RuntimeError, match="quota was exceeded") as exc:
         gemini_client.generate_json("", {}, {"type": "object"})
     assert "private content" not in str(exc.value)
+
+
+def test_gemini_payment_error_explains_billing_without_echoing_body(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(gemini_client.httpx, "post", lambda *_args, **_kwargs: _response({"error": "private content"}, 402))
+    with pytest.raises(RuntimeError, match="prepay credits are depleted") as exc:
+        gemini_client.generate_json("", {}, {"type": "object"})
+    assert "private content" not in str(exc.value)

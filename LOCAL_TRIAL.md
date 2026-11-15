@@ -64,3 +64,4 @@ GitHub's unauthenticated API rate limit can interrupt analysis of several reposi
 - Local backend tests and the frontend build pass.
 - A real Codex run analyzed the NeuroSig GitHub repository through the pasted-job case. Other repository reads hit GitHub's anonymous rate limit and were marked failed in that case.
 - Rishi's extractor, Harsh's case input adapter, and a controlled two-Lawyer review were exercised in tests. No local Ollama server was available on the Mac, so a live Qwen Lawyer/Judge run remains for the Windows laptop.
+- A live Gemini connection check using a user-supplied key returned HTTP 402 before any model content was generated. Google's API error documentation identifies this as depleted prepay credits. No key was stored or committed. A live Gemini Depth/Lawyer review remains unverified until the associated project's billing is resolved or another usable key is configured.

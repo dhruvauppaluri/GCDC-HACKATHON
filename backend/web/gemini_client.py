@@ -49,6 +49,8 @@ def generate_json(system: str, content: dict, schema: dict, *, model_env: str = 
         code = exc.response.status_code
         if code in {401, 403}:
             raise RuntimeError("Gemini rejected the API key or model access") from exc
+        if code == 402:
+            raise RuntimeError("Gemini project prepay credits are depleted; check billing in Google AI Studio before retrying") from exc
         if code == 429:
             raise RuntimeError("Gemini request quota was exceeded; retry later") from exc
         raise RuntimeError(f"Gemini request failed with HTTP {code}") from exc
