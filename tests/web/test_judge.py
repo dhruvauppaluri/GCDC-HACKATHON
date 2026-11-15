@@ -93,6 +93,7 @@ def test_gemini_lawyer_provider_uses_same_validated_case(monkeypatch):
         return result
 
     monkeypatch.setattr(gemini_lawyer, "generate_json", fake_generate)
+    monkeypatch.setattr(review, "adjudicate", lambda *_args: {"status": "complete", "recommendation": "consider"})
     monkeypatch.setenv("LAWYER_PROVIDER", "gemini")
     inputs = {**case(), "depth_projects": []}
     result = review.run_review(inputs)
@@ -114,6 +115,7 @@ def test_lawyers_start_independently_before_either_finishes(monkeypatch):
 
     monkeypatch.setenv("LAWYER_PROVIDER", "ollama")
     monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    monkeypatch.setattr(review, "adjudicate", lambda *_args: {"status": "complete", "recommendation": "consider"})
     result = review.run_review({**case(), "depth_projects": []})
     assert result["lawyer_execution"] == "independent_parallel"
 

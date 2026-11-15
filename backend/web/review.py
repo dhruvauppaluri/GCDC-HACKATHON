@@ -9,6 +9,7 @@ from data.fixtures.rishi.swe_paralegal import extract
 from prototypes.harsh.lawyers import lawyers
 from .jobs import SKILL_OPTIONS
 from .judge import judge_case
+from .judge_agent import adjudicate
 from .gemini_lawyer import review_with_gemini
 from .evidence_selection import select_lawyer_evidence
 
@@ -99,7 +100,7 @@ def run_review(inputs: dict) -> dict:
         return {"provider": provider, "model": model, "lawyer_execution": "skipped_unverified_requirements",
                 "lawyers": {"positive": empty, "negative": empty},
                 "categories": {category: {"pluses": [], "minuses": []} for category in lawyers.CATEGORIES},
-                "judge": judge_case(inputs, empty, empty)}
+                "judge": {**judge_case(inputs, empty, empty), "agent": {"status": "skipped_unverified_requirements"}}}
     review_lawyer = (lambda role, previous=None: review_with_gemini(role, requirements, evidence, depth_projects, previous)) if provider == "gemini" else (lambda role, previous=None: lawyers.review_with_ollama(model, role, requirements, evidence, depth_projects, previous))
     # Both model calls receive the same frozen case and neither sees the
     # other's argument. Reconcile contradictions only after both finish.
@@ -122,11 +123,21 @@ def run_review(inputs: dict) -> dict:
         independent_negative,
         positive, requirements,
     )
+    decision = judge_case(inputs, positive, negative)
+    if errors:
+        decision["agent"] = {"status": "skipped_incomplete_lawyers"}
+    elif decision["match_score"] is None:
+        decision["agent"] = {"status": "skipped_unscored_case"}
+    else:
+        try:
+            decision["agent"] = adjudicate(inputs, positive, negative, decision)
+        except Exception as error:
+            decision["agent"] = {"status": "unavailable", "error": str(error)}
     return {
         "provider": provider, "model": model,
         "lawyer_execution": "independent_parallel" if not errors else "partial_model_failure" if len(errors) == 1 else "model_unavailable",
         "lawyer_errors": errors,
         "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
-        "judge": judge_case(inputs, positive, negative),
+        "judge": decision,
     }

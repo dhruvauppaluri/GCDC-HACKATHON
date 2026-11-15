@@ -69,11 +69,13 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
             empty["projects"] = [{"text": "The project includes a tested API endpoint.", "evidence_ids": ["depth:evaluation-1:E1"], "kind": "artifact_evidence"}]
         return empty
     monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    monkeypatch.setattr(review, "adjudicate", lambda *_args: {"status": "complete", "recommendation": "consider"})
     assert client.post(f"/api/cases/{case_id}/review").status_code == 202
     result = client.get(f"/api/cases/{case_id}/review").json()
     assert result["status"] == "complete"
     assert result["result"]["judge"]["match_score"] is not None
     assert result["result"]["judge"]["requirements"]
+    assert result["result"]["judge"]["agent"]["status"] == "complete"
     assert result["result"]["categories"]["projects"]["pluses"][0]["evidence_ids"] == ["depth:evaluation-1:E1"]
 
     client.post("/api/auth/logout")

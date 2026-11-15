@@ -4,8 +4,8 @@
 - Assigned component: Project Depth Intelligence, website, and integration maintainer (confirmed by Dhruva)
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
-- Current task: Match-scoring accuracy audit and source-checked JD qualification integration on the local trial branch
-- Status: The revised Judge produces a stable documented-coverage score from source-quoted qualification groups and cited evidence; live one-repo and three-repo Gemini Lawyer runs both scored 50/100 on fixed Depth results. Lawyer input now selects cited findings from every repository, and a model outage is shown as degraded review.
+- Current task: Integrate a model-backed Judge after the independent Lawyers on the local trial branch
+- Status: The integration Judge agent now weighs both Lawyers' cited arguments and Paralegal claim signals, with citation validation and explicit fallback status. Its qualitative recommendation is separate from the evidence-based numeric score. A compact live Gemini run completed both Lawyers and the Judge (4 advocate points, 3 skeptical points, 67/100 documented coverage, Judge recommendation `consider`). A larger three-repository rerun kept its 50/100 evidence score but skipped the Judge agent after both Lawyer requests returned HTTP 503.
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
 - Work in progress: Windows-ready Ollama and opt-in Gemini provider; background JD coverage depends on employer pages being accessible while the web process runs
 - Next steps: calibrate requirement extraction and score bands against human-reviewed HW/CS/PM cases; hand the integration Judge to Rishi and Harsh for review
