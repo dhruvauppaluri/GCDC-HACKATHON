@@ -44,19 +44,74 @@ class TextExtractor(HTMLParser):
             self.parts.append(data.strip())
 
 
+class GitHubRepositoryList(HTMLParser):
+    """Read only public repository cards from a GitHub profile page."""
+    def __init__(self, owner: str):
+        super().__init__()
+        self.owner = owner.casefold()
+        self.repositories = []
+        self.current = None
+        self.capture = None
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        if tag == "li" and values.get("itemprop") == "owns" and "public" in values.get("class", "").split():
+            self.current = {"path": "", "name": "", "description": ""}
+        elif self.current is not None and tag == "a" and "codeRepository" in values.get("itemprop", "").split():
+            self.current["path"] = values.get("href", "")
+            self.capture = "name"
+        elif self.current is not None and values.get("itemprop") == "description":
+            self.capture = "description"
+
+    def handle_endtag(self, tag):
+        if self.current is not None and tag == "li":
+            path = self.current["path"]
+            parts = path.strip("/").split("/")
+            if len(parts) == 2 and parts[0].casefold() == self.owner and re.fullmatch(r"[A-Za-z0-9_.-]+", parts[1]):
+                self.repositories.append({
+                    "id": f"github:{parts[0]}/{parts[1]}", "source": "github",
+                    "title": self.current["name"].strip()[:120] or parts[1],
+                    "url": f"https://github.com/{parts[0]}/{parts[1]}",
+                    "summary": self.current["description"].strip()[:500] or "Public GitHub repository",
+                    "selected": False,
+                })
+            self.current = None
+            self.capture = None
+        elif tag in {"a", "p"}:
+            self.capture = None
+
+    def handle_data(self, data):
+        if self.current is not None and self.capture:
+            self.current[self.capture] += data
+
+
 def import_github(url: str):
     parsed = validate_public_url(url, {"github.com"})
     segments = [part for part in parsed.path.split("/") if part]
     if not segments or len(segments) > 2 or any(not re.fullmatch(r"[A-Za-z0-9_.-]+", part) for part in segments):
         raise ValueError("Use a GitHub profile or repository URL")
     owner = segments[0]
-    endpoint = f"https://api.github.com/repos/{owner}/{segments[1]}" if len(segments) == 2 else f"https://api.github.com/users/{owner}/repos"
-    with httpx.Client(timeout=8, follow_redirects=False, headers={"Accept": "application/vnd.github+json", "User-Agent": "SC-HACK-onboarding"}) as client:
-        response = client.get(endpoint, params={"per_page": 30, "sort": "updated"} if len(segments) == 1 else None)
-        response.raise_for_status()
-        raw = response.json()
-    repos = raw if isinstance(raw, list) else [raw]
-    return [{"id": f"github:{r['full_name']}", "source": "github", "title": r["name"][:120], "url": r["html_url"], "summary": (r.get("description") or "Public GitHub repository")[:500], "selected": False} for r in repos if isinstance(r, dict) and not r.get("private")][:8]
+    page = f"https://github.com/{owner}" + (f"/{segments[1]}" if len(segments) == 2 else "?tab=repositories")
+    with httpx.Client(timeout=15, follow_redirects=False, trust_env=False, headers={"User-Agent": "Mozilla/5.0"}) as client:
+        with client.stream("GET", page) as response:
+            response.raise_for_status()
+            if "text/html" not in response.headers.get("content-type", ""):
+                raise ValueError("GitHub did not return a public page")
+            chunks, size = [], 0
+            for chunk in response.iter_bytes():
+                size += len(chunk)
+                if size > 1_000_000:
+                    raise ValueError("GitHub profile page is too large to inspect")
+                chunks.append(chunk)
+    if len(segments) == 2:
+        name = segments[1]
+        return [{"id": f"github:{owner}/{name}", "source": "github", "title": name,
+                 "url": f"https://github.com/{owner}/{name}", "summary": "Public GitHub repository", "selected": False}]
+    parser = GitHubRepositoryList(owner)
+    parser.feed(b"".join(chunks).decode("utf-8", errors="replace"))
+    if not parser.repositories:
+        raise ValueError("No public repositories found on this GitHub profile")
+    return parser.repositories[:8]
 
 
 def import_website(url: str):

@@ -7,9 +7,22 @@ import pytest
 from backend.web import api
 from backend.web import cases
 from backend.web.jobs import match_jobs, suggest_tracks
+from backend.web.imports import GitHubRepositoryList
 from backend.web.storage import Store
 from backend.web.simplify_feed import normalize
 from scripts.seed_web_demo import FIXTURES, PASSWORD, main as seed_demo
+
+
+def test_public_github_profile_parser_excludes_other_owners_and_nonpublic_cards():
+    parser = GitHubRepositoryList("ada")
+    parser.feed('''<ul>
+      <li class="public source" itemprop="owns"><a href="/ada/Chip-Core" itemprop="name codeRepository">Chip Core</a>
+        <p itemprop="description">RTL and verification</p></li>
+      <li class="private source" itemprop="owns"><a href="/ada/private" itemprop="name codeRepository">private</a></li>
+      <li class="public source" itemprop="owns"><a href="/someone-else/repo" itemprop="name codeRepository">repo</a></li>
+    </ul>''')
+    assert parser.repositories == [{"id": "github:ada/Chip-Core", "source": "github", "title": "Chip Core",
+                                   "url": "https://github.com/ada/Chip-Core", "summary": "RTL and verification", "selected": False}]
 
 
 @pytest.fixture
