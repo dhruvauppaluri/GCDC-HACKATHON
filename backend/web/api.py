@@ -123,6 +123,10 @@ class PastedJob(BaseModel):
     track: str | None = None
 
 
+class LinkedDescription(BaseModel):
+    description: str = Field(min_length=40, max_length=20_000)
+
+
 @app.middleware("http")
 async def same_origin_writes(request: Request, call_next):
     if request.method in {"POST", "PATCH", "PUT", "DELETE"}:
@@ -332,12 +336,39 @@ def matches(user=Depends(current_user)):
         raise HTTPException(409, "Complete your profile first")
     source = os.getenv("RESEARCH_JOBS_FILE")
     feed_jobs, feed_status = feed.get()
+    overrides = store.job_description_overrides(user["id"])
+    feed_jobs = [{**job, **overrides.get(job["job_id"], {})} for job in feed_jobs]
     try:
         jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
     except (ValueError, OSError) as exc:
         raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
     matched = match_jobs(user["profile"], jobs)
+    # Keep manually completed listings in view even if their new requirements
+    # lower the preliminary match and the feed contains thousands of roles.
+    matched.sort(key=lambda job: (job["source"] != "pasted", job["job_id"] not in overrides))
     return {"jobs": matched[:40], "total_available": len(matched), "feed": feed_status}
+
+
+@app.put("/api/jobs/{job_id}/description")
+def save_linked_description(job_id: str, body: LinkedDescription, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    feed_jobs, _ = feed.get()
+    job = next((item for item in feed_jobs if item["job_id"] == job_id), None)
+    if not job or job["track"] not in candidate_export(user)["target_tracks"]:
+        raise HTTPException(404, "Linked role is unavailable for this candidate")
+    try:
+        parsed = parse_job_description(body.description, job["track"], job["title"], job["company"])
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    override = {
+        "description": parsed["description"], "description_status": "user_supplied",
+        "description_fetch_status": "user_supplied", "description_source": "user_paste",
+        "required_skills": parsed["required_skills"], "preferred_skills": parsed["preferred_skills"],
+        "research_note": "Candidate supplied this job description. Check it against the original posting before relying on the requirements.",
+    }
+    store.put_job_description_override(user["id"], job_id, override)
+    return {"job": match_jobs(user["profile"], [{**job, **override}])[0]}
 
 
 @app.post("/api/jobs/parse")
@@ -373,6 +404,8 @@ def create_case(body: NewCase, user=Depends(current_user)):
         raise HTTPException(422, "Select at most five projects")
     source = os.getenv("RESEARCH_JOBS_FILE")
     feed_jobs, _ = feed.get()
+    overrides = store.job_description_overrides(user["id"])
+    feed_jobs = [{**job, **overrides.get(job["job_id"], {})} for job in feed_jobs]
     try:
         jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
     except (ValueError, OSError) as exc:
@@ -380,7 +413,7 @@ def create_case(body: NewCase, user=Depends(current_user)):
     job = next((item for item in jobs if item["job_id"] == body.job_id), None)
     if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
         raise HTTPException(404, "Job is unavailable for this candidate")
-    if job.get("source") == "simplify":
+    if job.get("source") == "simplify" and job.get("description_status") != "user_supplied":
         job = feed.enrich_now(job)
     projects = []
     for project in selected:

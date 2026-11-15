@@ -31,6 +31,7 @@ class Store:
             db.execute("CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS pasted_jobs (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
+            db.execute("CREATE TABLE IF NOT EXISTS job_description_overrides (user_id TEXT NOT NULL, job_id TEXT NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(user_id, job_id), FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS reviews (case_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, status TEXT NOT NULL, payload TEXT, error TEXT, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
 
     def connect(self):
@@ -112,6 +113,16 @@ class Store:
         with self.connect() as db:
             rows = db.execute("SELECT payload FROM pasted_jobs WHERE user_id=? ORDER BY created_at DESC", (user_id,)).fetchall()
         return [json.loads(row["payload"]) for row in rows]
+
+    def put_job_description_override(self, user_id: str, job_id: str, payload: dict):
+        with self.lock, self.connect() as db:
+            db.execute("INSERT OR REPLACE INTO job_description_overrides VALUES (?,?,?,?)",
+                       (user_id, job_id, json.dumps(payload), utcnow().isoformat()))
+
+    def job_description_overrides(self, user_id: str) -> dict[str, dict]:
+        with self.connect() as db:
+            rows = db.execute("SELECT job_id,payload FROM job_description_overrides WHERE user_id=?", (user_id,)).fetchall()
+        return {row["job_id"]: json.loads(row["payload"]) for row in rows}
 
     def put_review(self, case_id: str, user_id: str):
         with self.lock, self.connect() as db:

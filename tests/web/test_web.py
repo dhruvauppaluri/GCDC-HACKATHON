@@ -6,6 +6,7 @@ from backend.web import api
 from backend.web import cases
 from backend.web.jobs import match_jobs, suggest_tracks
 from backend.web.storage import Store
+from backend.web.simplify_feed import normalize
 from scripts.seed_web_demo import FIXTURES, PASSWORD, main as seed_demo
 
 
@@ -19,6 +20,47 @@ def signup(client):
     response = client.post("/api/auth/signup", json={"email": "New@Example.com", "password": "DemoPass123!"})
     assert response.status_code == 200
     assert response.json()["email"] == "new@example.com"
+
+
+def test_inline_description_updates_same_feed_role_and_case_for_one_user(client, monkeypatch):
+    signup(client)
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    api.store.update_profile(user_id, {
+        "target_tracks": ["CS"], "skills": {"CS": {"Python": 3}}, "completed": True,
+        "projects": [{"id": "resume:one", "source": "resume", "title": "API project",
+                      "summary": "Built a Python service", "url": "", "selected": True}],
+    })
+    listing = normalize([{
+        "id": "inline", "active": True, "is_visible": True, "category": "Software",
+        "title": "Software Engineering Intern", "company_name": "Example",
+        "url": "https://example.com/role", "terms": ["Summer 2027"],
+    }], "2026-11-15T00:00:00Z")[0]
+    monkeypatch.setattr(api.feed, "get", lambda: ([listing], {"count": 1}))
+    monkeypatch.setattr(api.feed, "enrich_now", lambda _: (_ for _ in ()).throw(AssertionError("Manual JD was overwritten")))
+    monkeypatch.setattr(api, "start_depth", lambda *_: None)
+    job_id = listing["job_id"]
+    before = next(job for job in client.get("/api/jobs/matches").json()["jobs"] if job["job_id"] == job_id)
+    assert before["description_status"] == "listing_only"
+    assert client.put(f"/api/jobs/{job_id}/description", json={"description": "too short"}).status_code == 422
+    description = "Responsibilities include building Python APIs. Requirements include Python and SQL experience in production systems."
+    saved = client.put(f"/api/jobs/{job_id}/description", json={"description": description})
+    assert saved.status_code == 200
+    assert saved.json()["job"]["job_id"] == job_id
+    assert saved.json()["job"]["source_url"] == "https://example.com/role"
+    after = next(job for job in client.get("/api/jobs/matches").json()["jobs"] if job["job_id"] == job_id)
+    assert after["description_status"] == "user_supplied"
+    assert after["description"] == description
+    assert "Python" in after["matched_skills"]
+    assert "SQL" in after["skill_gaps"]
+    case_id = client.post("/api/cases", json={"job_id": job_id}).json()["case_id"]
+    assert client.get(f"/api/cases/{case_id}").json()["job"]["description"] == description
+
+    client.post("/api/auth/logout")
+    client.post("/api/auth/signup", json={"email": "other@example.com", "password": "DemoPass123!"})
+    other_id = api.store.authenticate("other@example.com", "DemoPass123!")
+    api.store.update_profile(other_id, {"target_tracks": ["CS"], "skills": {"CS": {}}, "completed": True})
+    other_job = next(job for job in client.get("/api/jobs/matches").json()["jobs"] if job["job_id"] == job_id)
+    assert other_job["description_status"] == "listing_only"
 
 
 def test_signup_login_resume_and_return(client):

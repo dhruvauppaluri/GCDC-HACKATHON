@@ -4,8 +4,8 @@
 - Assigned component: Project Depth Intelligence, website, and integration maintainer (confirmed by Dhruva)
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
-- Current task: Independent Lawyer orchestration and proactive linked-job-description matching on the local integration trial branch
-- Status: Both Lawyers now run concurrently from the same case evidence; the Simplify feed progressively caches linked descriptions and uses extracted requirements for quick matches when available
+- Current task: Inline candidate-supplied job descriptions for unreadable linked roles on the local integration trial branch
+- Status: Simplify roles without a readable JD now accept an account-scoped pasted description in the same role card; matching and Interested reviews use it without changing the role ID
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
 - Work in progress: Windows-ready Ollama and opt-in Gemini provider; background JD coverage depends on employer pages being accessible while the web process runs
 - Next steps: calibrate the Judge with human-reviewed HW/CS/PM cases, run a full candidate case on Gemini or Ollama, and hand the integration Judge to Rishi and Harsh for review
