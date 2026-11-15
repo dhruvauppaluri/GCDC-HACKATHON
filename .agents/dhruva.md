@@ -4,8 +4,8 @@
 - Assigned component: Project Depth Intelligence, website, and integration maintainer (confirmed by Dhruva)
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
-- Current task: Balance two separately owned Gemini project keys across Depth, Research, Lawyers, and Judge
-- Status: The shared Gemini transport routes across two project keys and fails over on quota or transient errors. Each key returned HTTP 200 in a live probe; a compact live pipeline used both slots despite HTTP 503. A full browser case completed the linked Simplify JD, all three repository Depth evaluations, six Paralegal signals, both Lawyers (8/5 points), and Judge agent (`consider`) with 62/100 documented coverage. An eligibility wording defect found in the UI was corrected. No key was written to the repository.
+- Current task: Clean the role review presentation so people can read scores, requirements, and agent findings without internal IDs.
+- Status: The browser case now shows compact Depth cards, a plain-language Judge verdict, short requirement status rows, and optional Lawyer arguments. Citation IDs, provider mode, duplicate assessment limits, and synthetic comparison records are removed from the main view. A saved authenticated case can be reopened with a `?case=` link for review. The frontend build and local browser check passed. No key was written to the repository.
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
 - Work in progress: Windows-ready Ollama and opt-in Gemini provider; background JD coverage depends on employer pages being accessible while the web process runs
 - Next steps: calibrate requirement extraction and score bands against human-reviewed HW/CS/PM cases; hand the integration Judge to Rishi and Harsh for review
