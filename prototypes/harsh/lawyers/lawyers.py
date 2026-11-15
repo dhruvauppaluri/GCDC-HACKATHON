@@ -189,7 +189,8 @@ def validate(review, requirements, evidence):
             if not isinstance(ids, list) or any(not isinstance(key, str) or key not in allowed for key in ids):
                 raise ValueError("Invalid evidence citation.")
             if point["kind"] != "unknown" and not ids:
-                raise ValueError("Supported findings and gaps require citations.")
+                point["kind"] = "unknown"
+                point["text"] = "This finding has no cited evidence and cannot be established."
             if point["kind"] == "artifact_evidence" and not any(
                 allowed[key]["source"] in {"depth_repository", "depth_document"} for key in ids
             ):

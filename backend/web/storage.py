@@ -116,6 +116,8 @@ class Store:
     def put_review(self, case_id: str, user_id: str):
         with self.lock, self.connect() as db:
             db.execute("INSERT OR IGNORE INTO reviews VALUES (?,?,?,?,?,?)", (case_id, user_id, "pending", None, None, utcnow().isoformat()))
+            db.execute("UPDATE reviews SET status='pending', payload=NULL, error=NULL WHERE case_id=? AND user_id=? AND status='failed'",
+                       (case_id, user_id))
 
     def finish_review(self, case_id: str, result: dict | None = None, error: str | None = None):
         with self.lock, self.connect() as db:

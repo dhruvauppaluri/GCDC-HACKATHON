@@ -41,6 +41,42 @@ def test_judge_rating_keeps_unknowns_out_of_exact_score():
     assert [row["status"] for row in result["requirements"]] == ["artifact_supported", "unknown", "claimed"]
 
 
+def test_judge_does_not_display_zero_to_hundred_for_no_evidence():
+    reqs = [{"id": "required:1", "kind": "required", "text": "SQL"}]
+    empty = {category: [] for category in review.lawyers.CATEGORIES}
+    result = rate(reqs, empty, empty, [], review._mentions_skill)
+    assert result["rating"] == "unassessed"
+    assert result["score_range"] is None
+
+
+def test_uncited_lawyer_finding_cannot_stop_entire_review():
+    findings = {category: [] for category in review.lawyers.CATEGORIES}
+    findings["projects"] = [{"text": "Built SQL storage", "evidence_ids": [], "kind": "supported_claim"}]
+    validated = review.lawyers.validate(findings, [], [])
+    assert validated["projects"][0]["kind"] == "unknown"
+
+
+def test_activity_citation_cannot_be_promoted_to_project_or_job():
+    findings = {category: [] for category in review.lawyers.CATEGORIES}
+    findings["projects"] = [{"text": "Real-world project", "evidence_ids": ["paralegal:1"], "kind": "supported_claim"}]
+    findings["work_experience"] = [{"text": "Worked in a job", "evidence_ids": ["paralegal:1"], "kind": "supported_claim"}]
+    evidence = [{"id": "paralegal:1", "source": "resume_claim", "location": "resume_text",
+                 "excerpt": "Built an API", "category": "other"}]
+    filtered = review._keep_category_evidence(findings, evidence)
+    assert filtered["projects"] == []
+    assert filtered["work_experience"] == []
+
+
+def test_failed_review_can_be_restarted(tmp_path):
+    store = Store(tmp_path / "retry.sqlite3")
+    store.put_review("case", "candidate")
+    store.finish_review("case", error="Ollama timed out")
+    assert store.get_review("case", "candidate")["status"] == "failed"
+    store.put_review("case", "candidate")
+    restarted = store.get_review("case", "candidate")
+    assert restarted == {"status": "pending", "result": None, "error": None}
+
+
 def test_paralegal_rejects_fabricated_quote(monkeypatch):
     sources = [{"id": "profile:resume", "source": "resume_claim", "location": "resume_text", "excerpt": "Java route planner"}]
     class Response:
@@ -52,6 +88,20 @@ def test_paralegal_rejects_fabricated_quote(monkeypatch):
     monkeypatch.setattr(paralegal, "urlopen", lambda *args, **kwargs: Response())
     with pytest.raises(ValueError, match="absent"):
         paralegal.extract_facts(sources)
+
+
+def test_paralegal_does_not_treat_career_goal_or_generic_experience_as_job(monkeypatch):
+    excerpt = "Experience: Built a route planner. Seeking software internships."
+    sources = [{"id": "profile:resume", "source": "resume_claim", "location": "resume_text", "excerpt": excerpt}]
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def read(self, *args): return json.dumps({"message": {"content": json.dumps({"facts": [
+            {"source_id": "profile:resume", "quote": excerpt, "category": "work_experience"}
+        ]})}}).encode()
+    monkeypatch.setattr(paralegal, "urlopen", lambda *args, **kwargs: Response())
+    facts = paralegal.extract_facts(sources)["evidence"]
+    assert facts == [{"source_id": "profile:resume", "quote": "Experience: Built a route planner", "category": "other"}]
 
 
 def test_review_passes_paralegal_facts_to_both_lawyers(monkeypatch):
@@ -103,6 +153,15 @@ def test_skill_in_job_overview_is_not_assumed_required():
     assert parsed["preferred_skills"] == ["SQL"]
 
 
+def test_preferred_only_match_does_not_get_worth_exploring():
+    profile = {"target_tracks": ["HW"], "skills": {"HW": {"Python": 4}}, "projects": []}
+    job = {"job_id": "embedded", "track": "hardware", "title": "Embedded Intern", "company": "Demo",
+           "required_skills": ["C", "embedded systems"], "preferred_skills": ["Python"]}
+    result = match_jobs(profile, [job])[0]
+    assert result["matched_skills"] == ["Python"]
+    assert result["screening"]["verdict"] == "more_info_needed"
+
+
 def test_judge_needs_evidence_for_each_required_skill():
     inputs = {"job": {"required_skills": ["Java", "SQL"]}, "depth_projects": [{"dimensions": {"implementation": {"score": 2}}}],
               "evidence": [{"id": "depth:e:E1", "source": "depth_repository", "location": "route.java",
@@ -140,7 +199,7 @@ def test_website_review_verifies_claims_before_judging(monkeypatch):
     monkeypatch.setattr(lawyers_grounded, "chat", fake_verify)
     result = review.run_review(inputs)
     assert len(calls) == 1
-    assert result["lawyers"]["positive"]["projects"][0]["kind"] == "unknown"
+    assert result["lawyers"]["positive"]["projects"] == []
     assert result["judge"]["strengths"] == []
     assert result["judge"]["verdict"] == "needs_more_evidence"
 
@@ -161,7 +220,7 @@ def test_required_skill_claim_fails_even_if_model_verifier_approves(monkeypatch)
     monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
     monkeypatch.setattr(review, "verify_findings", lambda model, findings, requirements, evidence: findings)
     result = review.run_review(inputs)
-    assert result["lawyers"]["positive"]["skills_required_knowledge"][0]["kind"] == "unknown"
+    assert result["lawyers"]["positive"]["skills_required_knowledge"] == []
     assert result["judge"]["verdict"] == "needs_more_evidence"
 
 

@@ -102,12 +102,19 @@ def _mentions_skill(text: str, skill: str) -> bool:
 
 
 def _keep_category_evidence(review: dict, evidence: list[dict]) -> dict:
-    """A project citation alone cannot establish work experience."""
+    """Keep project and employment findings within their cited source categories."""
     sources = {item["id"]: item for item in evidence}
+    review["projects"] = [point for point in review["projects"]
+                          if point["kind"] == "unknown" or any(
+                              sources[key]["source"] in {"depth_repository", "depth_document"} or
+                              sources[key]["location"].startswith("project/") or
+                              sources[key].get("category") == "project"
+                              for key in point["evidence_ids"] if key in sources)]
     review["work_experience"] = [point for point in review["work_experience"]
                                  if point["evidence_ids"] and not any(
                                      key.startswith("depth:") or key.startswith("profile:project:") or
-                                     sources[key]["location"].startswith("project/")
+                                      sources[key]["location"].startswith("project/") or
+                                      sources[key].get("category") != "work_experience"
                                      for key in point["evidence_ids"] if key in sources)]
     return review
 
@@ -131,12 +138,14 @@ def _ground_required_skill_claims(review: dict, requirements: list[dict], eviden
 
 def run_review(inputs: dict) -> dict:
     model = os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
-    paralegal = extract_facts(inputs["evidence"])
+    source_evidence = inputs["evidence"]
+    paralegal = extract_facts(source_evidence)
     inputs = {**inputs, "paralegal": paralegal}
-    # Pass the exact source spans to the Lawyers. The original sources remain available.
-    inputs["evidence"] = [*inputs["evidence"], *(
+    # The case retains full source excerpts; Lawyers see only extracted candidate spans
+    # plus independent Depth evidence, preventing uncategorized résumé text being cited.
+    inputs["evidence"] = [*(item for item in source_evidence if item["source"] != "resume_claim"), *(
         {"id": f"paralegal:{index}", "source": "resume_claim",
-         "location": next(item["location"] for item in inputs["evidence"] if item["id"] == fact["source_id"]),
+         "location": next(item["location"] for item in source_evidence if item["id"] == fact["source_id"]),
          "excerpt": fact["quote"], "source_id": fact["source_id"], "category": fact["category"]}
         for index, fact in enumerate(paralegal["evidence"], 1))]
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
@@ -149,8 +158,19 @@ def run_review(inputs: dict) -> dict:
             requirements, evidence),
         positive, requirements,
     )
+    positive = {category: [point for point in points if point["kind"] != "unknown"]
+                for category, points in positive.items()}
+    negative = {category: [point for point in points if point["kind"] != "unknown"]
+                for category, points in negative.items()}
+    judge = trial_judge(inputs, positive, negative)
+    negative["skills_required_knowledge"].extend(
+        {"text": f"No cited evidence establishes {row['requirement']}; this requirement remains unknown.",
+         "evidence_ids": [], "kind": "unknown"}
+        for row in judge["evidence_rating"]["requirements"]
+        if row["kind"] == "required" and row["status"] == "unknown"
+    )
     return {
         "model": model, "paralegal": paralegal, "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
-        "judge": trial_judge(inputs, positive, negative),
+        "judge": judge,
     }

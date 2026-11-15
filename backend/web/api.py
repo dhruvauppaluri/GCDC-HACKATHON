@@ -411,7 +411,7 @@ def start_case_review(case_id: str, user=Depends(current_user)):
     if not case:
         raise HTTPException(404, "Case not found")
     current = store.get_review(case_id, user["id"])
-    if current:
+    if current and current["status"] != "failed":
         return {"case_id": case_id, "status": current["status"]}
     bundle = hydrate_case(case)
     if bundle["status"] == "pending":

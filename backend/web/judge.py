@@ -23,6 +23,14 @@ def rate(requirements: list[dict], positive: dict, negative: dict, evidence: lis
                 if any(mentions_skill(point["text"], option) and mentions_skill(source["excerpt"], option)
                        for option in options):
                     (artifact if source["source"] in {"depth_repository", "depth_document"} else claim).append(citation)
+        # Structured self-ratings are explicit candidate claims even when the
+        # advocate omits them. They never count as verified artifact evidence.
+        if not artifact and not claim:
+            for citation, source in by_id.items():
+                if source.get("category") == "skill" and source.get("location", "").startswith("skills/") and any(
+                    mentions_skill(source["excerpt"], option) for option in options
+                ):
+                    claim.append(citation)
         for point in explicit_gaps:
             if any(mentions_skill(point["text"], option) for option in options):
                 gap.extend(citation for citation in point["evidence_ids"] if citation in by_id)
@@ -32,6 +40,9 @@ def rate(requirements: list[dict], positive: dict, negative: dict, evidence: lis
                      "evidence_ids": list(dict.fromkeys(artifact or claim or gap))})
     if not rows:
         return {"score": None, "score_range": None, "rating": "unassessed", "requirements": []}
+    if all(row["status"] == "unknown" for row in rows):
+        return {"score": None, "score_range": None, "rating": "unassessed", "requirements": rows,
+                "method": "No cited evidence for any job requirement; a numeric rating would be misleading."}
     # Required requirements carry four times the weight of preferences.
     weights = [4 if row["kind"] == "required" else 1 for row in rows]
     denominator = sum(weights)

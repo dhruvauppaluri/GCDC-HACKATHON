@@ -148,4 +148,6 @@ def match_jobs(profile: dict, jobs: list[dict]):
         source = job.get("source") or ("curated" if job["job_id"] in {j["job_id"] for j in SEED_JOBS} else "research")
         result.append({**job, "matched_skills": matched, "skill_gaps": gaps, "project_context": project_context, "source": source,
                        "screening": lightweight_screen(matched, gaps, project_context, title_only=title_only)})
+        if required and not any(skill in matched for skill in required):
+            result[-1]["screening"]["verdict"] = "more_info_needed"
     return sorted(result, key=lambda j: (j["source"] != "pasted", -len(j["matched_skills"]), -len(j["project_context"]), len(j["skill_gaps"]), -int(j.get("date_posted") or 0), j["title"]))

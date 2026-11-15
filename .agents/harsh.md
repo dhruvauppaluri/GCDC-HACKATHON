@@ -44,3 +44,9 @@
 - Scope: `backend/web/judge.py`, the provisional review result, and website display.
 - Adds a role-specific 0–100 evidence coverage rubric. Required requirements carry four times preferred weight; artifact evidence, candidate claims, explicit gaps, and unknowns remain distinct. Unknowns produce a range rather than a false exact score.
 - Verification: eight targeted backend checks and the TypeScript/Vite build passed. The numeric rubric is a prototype and has not been calibrated against human judgments.
+
+## November 15 sample review audit
+
+- Exercised 39 quick candidate/job matches, 12 local Paralegal extractions, six full local Paralegal/Lawyer/Judge reviews, and three targeted live reruns. Manual findings and raw-output paths are recorded in the workspace audit report.
+- Corrected career-goal and generic-activity classification, preserved all structured self-rated skills, rejected uncited Lawyer assertions without failing the whole case, removed category-mismatched and repetitive findings, corrected misleading all-unknown ratings and preferred-only quick matches, and allowed failed reviews to be retried.
+- Full backend suite: 52 passed. Remaining: a live project-artifact Depth handoff, real résumé/browser rehearsal, and human calibration. Figma handoff is pending Venya.
