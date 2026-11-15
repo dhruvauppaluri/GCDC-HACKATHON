@@ -1,4 +1,4 @@
-"""Accounts, onboarding, profiles, and local demo jobs API."""
+"""Accounts, onboarding, profiles, Simplify listings, and review cases."""
 import io
 from hashlib import sha256
 import logging
@@ -19,7 +19,7 @@ import httpx
 
 from .imports import import_github, import_website, validate_public_url
 from .cases import hydrate_case, start_depth
-from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
+from .jobs import SKILL_OPTIONS, TRACKS, match_jobs, parse_job_description, suggest_tracks
 from .review import review_inputs, run_review
 from .gemini_client import gemini_keys_available
 from .requirements import EXTRACTION_VERSION, extract_requirements
@@ -342,14 +342,10 @@ def export_profile(user=Depends(current_user)):
 def matches(user=Depends(current_user)):
     if not user["profile"]["completed"]:
         raise HTTPException(409, "Complete your profile first")
-    source = os.getenv("RESEARCH_JOBS_FILE")
     feed_jobs, feed_status = feed.get()
     overrides = store.job_description_overrides(user["id"])
     feed_jobs = [{**job, **overrides.get(job["job_id"], {})} for job in feed_jobs]
-    try:
-        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
-    except (ValueError, OSError) as exc:
-        raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
+    jobs = [*store.pasted_jobs(user["id"]), *feed_jobs]
     matched = match_jobs(user["profile"], jobs)
     # Keep manually completed listings in view even if their new requirements
     # lower the preliminary match and the feed contains thousands of roles.
@@ -410,14 +406,10 @@ def create_case(body: NewCase, user=Depends(current_user)):
         raise HTTPException(422, "Add a GitHub repository or select a project first")
     if len(projects_to_assess) > 16:
         raise HTTPException(422, "At most 16 profile projects can be assessed in one review")
-    source = os.getenv("RESEARCH_JOBS_FILE")
     feed_jobs, _ = feed.get()
     overrides = store.job_description_overrides(user["id"])
     feed_jobs = [{**job, **overrides.get(job["job_id"], {})} for job in feed_jobs]
-    try:
-        jobs = [*store.pasted_jobs(user["id"]), *load_jobs(Path(source) if source else None), *feed_jobs]
-    except (ValueError, OSError) as exc:
-        raise HTTPException(503, f"Research jobs unavailable: {exc}") from exc
+    jobs = [*store.pasted_jobs(user["id"]), *feed_jobs]
     job = next((item for item in jobs if item["job_id"] == body.job_id), None)
     if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
         raise HTTPException(404, "Job is unavailable for this candidate")

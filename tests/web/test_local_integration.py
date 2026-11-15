@@ -38,8 +38,9 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     saved = client.post("/api/jobs/pasted", json={"description": description, "track": "software", "title": "Software Intern", "company": "Trial Co"})
     assert saved.status_code == 201
     job_id = saved.json()["job"]["job_id"]
+    monkeypatch.setattr(api.feed, "get", lambda: ([], {"count": 0}))
     matches = client.get("/api/jobs/matches").json()["jobs"]
-    assert any(item["source"] == "curated" for item in matches)
+    assert {item["source"] for item in matches} == {"pasted"}
     pasted = next(item for item in matches if item["job_id"] == job_id)
     assert pasted["screening"]["stage"] == "profile_screen"
 

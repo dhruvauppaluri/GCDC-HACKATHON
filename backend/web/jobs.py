@@ -1,21 +1,7 @@
-"""Curated jobs and a small adapter for the draft Research output."""
-import json
-from pathlib import Path
+"""Parse and screen candidate-supplied jobs and Simplify listings."""
 import re
 
 TRACKS = {"HW": "hardware", "CS": "software", "PM": "product"}
-
-SEED_JOBS = [
-    {"job_id": "hw-1", "track": "hardware", "title": "FPGA Design Intern", "company": "Northstar Labs", "required_skills": ["SystemVerilog", "FPGA", "digital design"], "preferred_skills": ["simulation", "Python"]},
-    {"job_id": "hw-2", "track": "hardware", "title": "Embedded Systems Engineer", "company": "Fieldnote Robotics", "required_skills": ["C", "embedded systems", "electronics"], "preferred_skills": ["PCB design", "Python"]},
-    {"job_id": "hw-3", "track": "hardware", "title": "PCB Design Associate", "company": "Orbit Devices", "required_skills": ["PCB design", "electronics", "schematics"], "preferred_skills": ["Altium", "testing"]},
-    {"job_id": "cs-1", "track": "software", "title": "Software Engineering Intern", "company": "Threadline", "required_skills": ["Python", "APIs", "SQL"], "preferred_skills": ["React", "testing"]},
-    {"job_id": "cs-2", "track": "software", "title": "Frontend Engineer", "company": "Daylight Studio", "required_skills": ["TypeScript", "React", "CSS"], "preferred_skills": ["accessibility", "testing"]},
-    {"job_id": "cs-3", "track": "software", "title": "Systems Software Intern", "company": "Copper Cloud", "required_skills": ["C++", "Linux", "algorithms"], "preferred_skills": ["Python", "distributed systems"]},
-    {"job_id": "pm-1", "track": "product", "title": "Associate Product Manager", "company": "Tandem", "required_skills": ["user research", "prioritization", "analytics"], "preferred_skills": ["SQL", "roadmapping"]},
-    {"job_id": "pm-2", "track": "product", "title": "Technical Product Intern", "company": "Signalworks", "required_skills": ["product strategy", "technical communication", "analytics"], "preferred_skills": ["APIs", "SQL"]},
-    {"job_id": "pm-3", "track": "product", "title": "Product Operations Associate", "company": "Mosaic", "required_skills": ["stakeholder management", "metrics", "experimentation"], "preferred_skills": ["user research", "SQL"]},
-]
 
 SUGGESTIONS = {
     "HW": ["fpga", "chip", "asic", "embedded", "pcb", "electronics", "circuit", "hardware", "verilog"],
@@ -72,21 +58,6 @@ def suggest_tracks(interests: str):
     return [track for track, score in sorted(scores.items(), key=lambda item: -item[1]) if score]
 
 
-def load_jobs(path: Path | None):
-    jobs = list(SEED_JOBS)
-    if path and path.exists():
-        raw = json.loads(path.read_text())
-        if not isinstance(raw, list):
-            raise ValueError("Research jobs file must contain an array")
-        for item in raw:
-            if not isinstance(item, dict) or not all(item.get(k) for k in ("job_id", "track", "title", "company")):
-                continue
-            if item["track"] not in TRACKS.values():
-                continue
-            jobs.append({**item, "required_skills": item.get("required_skills") or [], "preferred_skills": item.get("preferred_skills") or []})
-    return list({j["job_id"]: j for j in jobs}.values())
-
-
 def lightweight_screen(matched: list[str], gaps: list[str], projects: list[str], *, title_only: bool = False,
                        fetched_description: bool = False) -> dict:
     """Fast claim-only advocate/skeptic pass for the discovery list."""
@@ -121,7 +92,7 @@ def match_jobs(profile: dict, jobs: list[dict]):
         # a missing mandatory qualification before the full JD is parsed.
         gaps = [] if job.get("source") == "simplify" else [s for s in required if s.casefold() not in skill_names]
         project_context = [p["title"] for p in selected_projects if any(s.casefold() in (p.get("title", "") + " " + p.get("summary", "")).casefold() for s in signals)][:2]
-        source = job.get("source") or ("curated" if job["job_id"] in {j["job_id"] for j in SEED_JOBS} else "research")
+        source = job.get("source") or "unspecified"
         result.append({**job, "matched_skills": matched, "skill_gaps": gaps, "project_context": project_context, "source": source,
                        "screening": lightweight_screen(matched, gaps, project_context, title_only=title_only,
                                                        fetched_description=job.get("source") == "simplify" and not title_only)})

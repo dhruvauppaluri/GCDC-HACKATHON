@@ -22,6 +22,13 @@ def signup(client):
     assert response.json()["email"] == "new@example.com"
 
 
+def simplify_job(job_id, track, title, required_skills):
+    return {"job_id": job_id, "source": "simplify", "track": track, "title": title,
+            "company": "Example", "source_url": "https://example.com/job",
+            "description_status": "fetched", "description": f"Required: {', '.join(required_skills)}.",
+            "required_skills": required_skills, "preferred_skills": []}
+
+
 def test_inline_description_updates_same_feed_role_and_case_for_one_user(client, monkeypatch):
     signup(client)
     user_id = api.store.authenticate("new@example.com", "DemoPass123!")
@@ -141,7 +148,7 @@ def test_signup_login_resume_and_return(client):
     assert client.get("/api/me").json()["profile"]["completed"] is False
 
 
-def test_multiple_tracks_skills_matches_and_research(client, tmp_path, monkeypatch):
+def test_multiple_tracks_match_only_simplify_listings(client, tmp_path, monkeypatch):
     signup(client)
     client.patch("/api/onboarding/name", json={"first_name": "Ada", "last_name": "Lovelace"})
     client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"I built an FPGA and React app")})
@@ -155,13 +162,19 @@ def test_multiple_tracks_skills_matches_and_research(client, tmp_path, monkeypat
     exported = client.get("/api/profile/export").json()
     assert exported["target_tracks"] == ["hardware", "software"]
     assert "I built an FPGA" in exported["resume_text"]
-    jobs = client.get("/api/jobs/matches").json()["jobs"]
-    assert jobs and all(j["track"] in {"hardware", "software"} for j in jobs)
-    assert any("FPGA" in j["matched_skills"] for j in jobs)
+    listing = normalize([{"id": "fpga-intern", "active": True, "is_visible": True,
+                          "category": "Hardware", "title": "FPGA Design Intern",
+                          "company_name": "Example", "url": "https://example.com/job",
+                          "terms": ["Summer 2027"]}], "2026-11-15T00:00:00Z")[0]
+    monkeypatch.setattr(api.feed, "get", lambda: ([listing], {"count": 1}))
     research = tmp_path / "research.json"
     research.write_text('[{"job_id":"r1","track":"hardware","title":"Circuit Intern","company":"Research Co","required_skills":["FPGA"],"preferred_skills":[]}]')
     monkeypatch.setenv("RESEARCH_JOBS_FILE", str(research))
-    assert any(j["source"] == "research" for j in client.get("/api/jobs/matches").json()["jobs"])
+    jobs = client.get("/api/jobs/matches").json()["jobs"]
+    assert len(jobs) == 1
+    assert jobs[0]["source"] == "simplify"
+    assert all(j["track"] in {"hardware", "software"} for j in jobs)
+    assert any("FPGA" in j["matched_skills"] for j in jobs)
     client.patch("/api/onboarding/interests", json={"interests": "FPGA, software, and product", "target_tracks": ["HW", "CS", "PM"]})
     assert client.get("/api/me").json()["profile"]["completed"] is False
     assert client.get("/api/jobs/matches").status_code == 409
@@ -231,6 +244,10 @@ def test_synthetic_user_resumes_and_idempotent_seed(tmp_path, monkeypatch):
     seed_demo()
     store = Store(tmp_path / "app.sqlite3")
     monkeypatch.setattr(api, "store", store)
+    listings = [simplify_job("simplify:hw", "hardware", "FPGA Intern", ["FPGA"]),
+                simplify_job("simplify:cs", "software", "Software Intern", ["Python"]),
+                simplify_job("simplify:pm", "product", "Product Intern", ["user research"])]
+    monkeypatch.setattr(api.feed, "get", lambda: (listings, {"count": len(listings)}))
     with TestClient(api.app) as client:
         for item in fixtures:
             response = client.post("/api/auth/login", json={"email": item["email"], "password": PASSWORD})
@@ -246,6 +263,9 @@ def test_synthetic_user_resumes_and_idempotent_seed(tmp_path, monkeypatch):
 
 
 def test_selected_project_case_handoff_and_user_isolation(client, monkeypatch):
+    job = simplify_job("simplify:cs-1", "software", "Software Intern", ["Python", "SQL"])
+    monkeypatch.setattr(api.feed, "get", lambda: ([job], {"count": 1}))
+    monkeypatch.setattr(api.feed, "enrich_now", lambda item: item)
     signup(client)
     client.patch("/api/onboarding/name", json={"first_name": "Ada", "last_name": "Lovelace"})
     client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"I built a Python API.")})
@@ -256,7 +276,7 @@ def test_selected_project_case_handoff_and_user_isolation(client, monkeypatch):
     assert added.status_code == 200
     resume_id = added.json()["project"]["id"]
     assert added.json()["project"]["source"] == "resume"
-    assert client.post("/api/cases", json={"job_id": "cs-1"}).status_code == 422
+    assert client.post("/api/cases", json={"job_id": job["job_id"]}).status_code == 422
     monkeypatch.setattr(api, "import_github", lambda _: [{"id": "github:ada/api", "source": "github", "title": "API", "url": "https://github.com/ada/api", "summary": "A Python API", "selected": False}])
     client.patch("/api/profile/links", json={"github_url": "https://github.com/ada"})
     client.post("/api/profile/import")
@@ -273,7 +293,7 @@ def test_selected_project_case_handoff_and_user_isolation(client, monkeypatch):
         "follow_up_questions": [{"id": "Q1", "question": "How does it scale?"}],
         "evidence": [{"id": "E1", "source_type": "repository", "location": "api.py@abc:L1-L3", "excerpt": "def api(): pass"}],
     }, "error": None})
-    response = client.post("/api/cases", json={"job_id": "cs-1"})
+    response = client.post("/api/cases", json={"job_id": job["job_id"]})
     assert response.status_code == 202
     assert started == [("github:ada/api", "software", "I implemented the API endpoints")]
     case_id = response.json()["case_id"]
@@ -317,6 +337,9 @@ def test_depth_handoff_labels_contribution_as_claim(monkeypatch):
 
 
 def test_case_keeps_project_link_when_depth_start_fails(client, monkeypatch):
+    job = simplify_job("simplify:cs-1", "software", "Software Intern", ["Python"])
+    monkeypatch.setattr(api.feed, "get", lambda: ([job], {"count": 1}))
+    monkeypatch.setattr(api.feed, "enrich_now", lambda item: item)
     signup(client)
     client.patch("/api/onboarding/name", json={"first_name": "Ada", "last_name": "Lovelace"})
     client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"I built an API")})
@@ -328,7 +351,7 @@ def test_case_keeps_project_link_when_depth_start_fails(client, monkeypatch):
     client.post("/api/profile/import")
     client.patch("/api/profile/projects", json={"selected_ids": ["github:ada/api"]})
     monkeypatch.setattr(api, "start_depth", lambda *_: (_ for _ in ()).throw(ValueError("offline")))
-    response = client.post("/api/cases", json={"job_id": "cs-1"})
+    response = client.post("/api/cases", json={"job_id": job["job_id"]})
     assert response.status_code == 202
     assert response.json()["status"] == "partial"
     case = client.get(f"/api/cases/{response.json()['case_id']}").json()
@@ -338,6 +361,9 @@ def test_case_keeps_project_link_when_depth_start_fails(client, monkeypatch):
 
 
 def test_website_link_reaches_depth_and_lawyer_bundle(client, monkeypatch):
+    job = simplify_job("simplify:pm-1", "product", "Product Intern", ["user research"])
+    monkeypatch.setattr(api.feed, "get", lambda: ([job], {"count": 1}))
+    monkeypatch.setattr(api.feed, "enrich_now", lambda item: item)
     signup(client)
     client.patch("/api/onboarding/name", json={"first_name": "Ada", "last_name": "Lovelace"})
     client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"I designed a product website")})
@@ -352,7 +378,7 @@ def test_website_link_reaches_depth_and_lawyer_bundle(client, monkeypatch):
     captured = []
     monkeypatch.setattr(api, "start_depth", lambda project, track: captured.append((project, track)) or "website-evaluation")
     monkeypatch.setattr(cases, "get_depth", lambda _: {"status": "complete", "result": {"demonstrated_skills": [], "follow_up_questions": [], "evidence": []}, "error": None})
-    case_id = client.post("/api/cases", json={"job_id": "pm-1"}).json()["case_id"]
+    case_id = client.post("/api/cases", json={"job_id": job["job_id"]}).json()["case_id"]
     assert captured[0][0]["url"] == "https://portfolio.example/work"
     assert captured[0][1] == "product"
     bundle = client.get(f"/api/cases/{case_id}").json()

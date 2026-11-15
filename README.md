@@ -41,7 +41,7 @@ cd web && npm install && npm run build && cd ..
 
 Open `http://127.0.0.1:8010`. The seed command loads 13 synthetic accounts from `tests/web/fixtures/users/*.json` and leaves existing accounts untouched. All sample accounts use `DemoPass123!`. Start with `demo@orbit.local` for a completed mixed HW/CS profile, `taylor.pm@orbit.local` for PM, `jamie.resume@orbit.local` to resume at upload, or `devon.skills@orbit.local` to resume at skills. Each JSON includes its scenario and resume text where applicable; no real candidate data is included. New visitors can sign up with their own email. To develop the frontend, run `cd web && npm run dev` in a second terminal and open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8010.
 
-For Research integration, set `RESEARCH_JOBS_FILE` to a JSON array matching the job shape in `docs/api-contracts.md` before starting the API. Curated roles stay available when no file is configured. Run `.venv/bin/pytest tests/web` and `cd web && npm run build` to verify the website.
+Automatic internship listings come from the SimplifyJobs Summer2027-Internships feed. Candidates can also paste a job description, or add one directly to a Simplify listing when its linked description is unavailable. Run `.venv/bin/pytest tests/web` and `cd web && npm run build` to verify the website.
 
 ## Selected-project Depth handoff
 
