@@ -33,7 +33,7 @@ Start Ollama if it is not already running. Then open two PowerShell windows at t
 ```powershell
 $env:DEPTH_WORKERS = "1"
 $env:DEPTH_OLLAMA_MODEL = "qwen3:4b"
-# Optional but recommended for multiple GitHub projects: $env:GITHUB_TOKEN = gh auth token
+# Optional for multiple GitHub projects: set GITHUB_TOKEN as shown below.
 .\.venv\Scripts\python.exe -m uvicorn backend.depth.api:app --host 127.0.0.1 --port 8000
 ```
 
@@ -47,7 +47,18 @@ $env:LAWYER_OLLAMA_MODEL = "qwen3:4b"
 
 Open `http://127.0.0.1:8010` and use the generated local login. The seed does not contain a password; the command generates one on that laptop. If you prefer Codex for Depth, set `DEPTH_INTEGRATION_MODE=codex` on the web process and sign in to the Codex CLI on that laptop. The two Lawyers still require Ollama.
 
-GitHub's unauthenticated API rate limit can interrupt analysis of several repositories because Depth inspects individual files. Set `GITHUB_TOKEN` only in the Depth process environment if you have a GitHub token; do not put it in a file or commit it. A partially inspected repository keeps a limitation rather than silently claiming full verification.
+GitHub's unauthenticated API rate limit can interrupt analysis of several repositories because Depth inspects individual files. A partially inspected repository keeps a limitation rather than silently claiming full verification. If GitHub reports a limit error, either wait for the reset and start a new assessment, or create a GitHub fine-grained personal access token with **Contents: read-only** for the repositories you want to inspect. Set `GITHUB_TOKEN` in **both** the Depth and website PowerShell windows before starting their servers; each process needs its own environment variable. Keep the token out of the repo, screenshots, logs, and chat. Connecting GitHub to Codex does not automatically give this local app a token.
+
+For a private prompt in each PowerShell window:
+
+```powershell
+$secret = Read-Host "GitHub read-only token" -AsSecureString
+$ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
+try { $env:GITHUB_TOKEN = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) }
+finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
+```
+
+The token stays in that PowerShell session and its child server process. Do not use a GitHub token with write permissions for this read-only import.
 
 ## What has been checked
 

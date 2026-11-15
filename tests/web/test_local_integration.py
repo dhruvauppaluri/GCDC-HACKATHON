@@ -4,11 +4,29 @@ import json
 import pytest
 
 from backend.web import api, cases, review
+from backend.web import imports
 from backend.web import paralegal
 from backend.web.judge import rate
 from data.fixtures.rishi import lawyers_grounded
 from backend.web.jobs import parse_job_description, match_jobs
 from backend.web.storage import Store
+
+
+def test_github_import_uses_optional_token_and_reports_quota(monkeypatch):
+    seen = {}
+    class Response:
+        status_code = 429
+        headers = {"x-ratelimit-remaining": "0"}
+    class Client:
+        def __init__(self, **kwargs): seen.update(kwargs)
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def get(self, *args, **kwargs): return Response()
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(imports.httpx, "Client", Client)
+    with pytest.raises(RuntimeError, match="GitHub API limit"):
+        imports.import_github("https://github.com/example/repo")
+    assert seen["headers"]["Authorization"] == "Bearer test-token"
 
 
 def test_paralegal_extracts_only_exact_cited_spans(monkeypatch):

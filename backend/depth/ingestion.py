@@ -21,7 +21,7 @@ ALLOWED_SUFFIXES = (".py", ".js", ".ts", ".tsx", ".swift", ".sv", ".v", ".c", ".
 
 
 def _rate_limited(response) -> bool:
-    return getattr(response, "status_code", None) == 403 and getattr(response, "headers", {}).get("x-ratelimit-remaining") == "0"
+    return getattr(response, "status_code", None) in {403, 429} and getattr(response, "headers", {}).get("x-ratelimit-remaining") == "0"
 
 
 def validate_public_website_url(url: str) -> None:

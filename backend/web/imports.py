@@ -1,5 +1,6 @@
 """Bounded import of user-supplied public project links."""
 import ipaddress
+import os
 import re
 import socket
 from html.parser import HTMLParser
@@ -51,8 +52,13 @@ def import_github(url: str):
         raise ValueError("Use a GitHub profile or repository URL")
     owner = segments[0]
     endpoint = f"https://api.github.com/repos/{owner}/{segments[1]}" if len(segments) == 2 else f"https://api.github.com/users/{owner}/repos"
-    with httpx.Client(timeout=8, follow_redirects=False, headers={"Accept": "application/vnd.github+json", "User-Agent": "SC-HACK-onboarding"}) as client:
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "SC-HACK-onboarding"}
+    if token := os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
+    with httpx.Client(timeout=8, follow_redirects=False, headers=headers) as client:
         response = client.get(endpoint, params={"per_page": 30, "sort": "updated"} if len(segments) == 1 else None)
+        if response.status_code in {403, 429} and response.headers.get("x-ratelimit-remaining") == "0":
+            raise RuntimeError("GitHub API limit reached. Set GITHUB_TOKEN in the website process, or retry after GitHub's rate-limit reset.")
         response.raise_for_status()
         raw = response.json()
     repos = raw if isinstance(raw, list) else [raw]
