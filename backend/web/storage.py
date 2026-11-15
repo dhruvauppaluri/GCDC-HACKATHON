@@ -34,6 +34,7 @@ class Store:
             db.execute("CREATE TABLE IF NOT EXISTS job_description_overrides (user_id TEXT NOT NULL, job_id TEXT NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(user_id, job_id), FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS requirement_extractions (key TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS reviews (case_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, status TEXT NOT NULL, payload TEXT, error TEXT, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
+            db.execute("CREATE TABLE IF NOT EXISTS saved_jobs (user_id TEXT NOT NULL, job_id TEXT NOT NULL, payload TEXT NOT NULL, saved_at TEXT NOT NULL, PRIMARY KEY(user_id, job_id), FOREIGN KEY(user_id) REFERENCES users(id))")
 
     def connect(self):
         db = sqlite3.connect(self.path)
@@ -106,6 +107,18 @@ class Store:
             row = db.execute("SELECT payload,created_at FROM cases WHERE id=? AND user_id=?", (case_id, user_id)).fetchone()
         return {**json.loads(row["payload"]), "created_at": row["created_at"]} if row else None
 
+    def list_cases(self, user_id: str):
+        with self.connect() as db:
+            rows = db.execute("SELECT c.id,c.payload,c.created_at,r.status AS review_status,r.payload AS review_payload FROM cases c LEFT JOIN reviews r ON r.case_id=c.id AND r.user_id=c.user_id WHERE c.user_id=? ORDER BY c.created_at DESC LIMIT 50", (user_id,)).fetchall()
+        items = []
+        for row in rows:
+            case = json.loads(row["payload"])
+            review = json.loads(row["review_payload"]) if row["review_payload"] else {}
+            items.append({"case_id": row["id"], "job": {key: case["job"].get(key) for key in ("job_id", "title", "company", "track", "source")},
+                          "created_at": row["created_at"], "review_status": row["review_status"] or "not_started",
+                          "match_score": (review.get("judge") or {}).get("match_score")})
+        return items
+
     def put_pasted_job(self, user_id: str, job: dict):
         with self.lock, self.connect() as db:
             db.execute("INSERT INTO pasted_jobs VALUES (?,?,?,?)", (job["job_id"], user_id, json.dumps(job), utcnow().isoformat()))
@@ -114,6 +127,19 @@ class Store:
         with self.connect() as db:
             rows = db.execute("SELECT payload FROM pasted_jobs WHERE user_id=? ORDER BY created_at DESC", (user_id,)).fetchall()
         return [json.loads(row["payload"]) for row in rows]
+
+    def save_job(self, user_id: str, job: dict):
+        with self.lock, self.connect() as db:
+            db.execute("INSERT OR REPLACE INTO saved_jobs VALUES (?,?,?,?)", (user_id, job["job_id"], json.dumps(job), utcnow().isoformat()))
+
+    def saved_jobs(self, user_id: str):
+        with self.connect() as db:
+            rows = db.execute("SELECT payload,saved_at FROM saved_jobs WHERE user_id=? ORDER BY saved_at DESC", (user_id,)).fetchall()
+        return [{**json.loads(row["payload"]), "saved_at": row["saved_at"]} for row in rows]
+
+    def unsave_job(self, user_id: str, job_id: str):
+        with self.lock, self.connect() as db:
+            db.execute("DELETE FROM saved_jobs WHERE user_id=? AND job_id=?", (user_id, job_id))
 
     def put_job_description_override(self, user_id: str, job_id: str, payload: dict):
         with self.lock, self.connect() as db:

@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
+from docx import Document
 import httpx
 
 from .imports import import_github, import_website, validate_public_url
@@ -184,16 +185,19 @@ def save_name(body: Name, user=Depends(current_user)):
 @app.post("/api/onboarding/resume")
 async def upload_resume(file: UploadFile = File(...), user=Depends(current_user)):
     name = Path(file.filename or "").name
-    if not name.lower().endswith((".pdf", ".txt")):
-        raise HTTPException(422, "Upload a PDF or TXT resume")
-    raw = await file.read(2_000_001)
-    if len(raw) > 2_000_000:
-        raise HTTPException(413, "Resume must be 2 MB or smaller")
+    if not name.lower().endswith((".pdf", ".docx", ".txt")):
+        raise HTTPException(422, "Upload a PDF, DOCX, or TXT resume")
+    raw = await file.read(10_000_001)
+    if len(raw) > 10_000_000:
+        raise HTTPException(413, "Resume must be 10 MB or smaller")
     try:
         if name.lower().endswith(".pdf"):
             if not raw.startswith(b"%PDF"):
                 raise ValueError("File is not a PDF")
             text = "\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(raw)).pages[:20])
+        elif name.lower().endswith(".docx"):
+            document = Document(io.BytesIO(raw))
+            text = "\n".join([*(p.text for p in document.paragraphs), *(cell.text for table in document.tables for row in table.rows for cell in row.cells)])
         else:
             text = raw.decode("utf-8-sig")
     except Exception as exc:
@@ -339,7 +343,7 @@ def export_profile(user=Depends(current_user)):
 
 
 @app.get("/api/jobs/matches")
-def matches(user=Depends(current_user)):
+def matches(q: str = "", user=Depends(current_user)):
     if not user["profile"]["completed"]:
         raise HTTPException(409, "Complete your profile first")
     feed_jobs, feed_status = feed.get()
@@ -347,10 +351,37 @@ def matches(user=Depends(current_user)):
     feed_jobs = [{**job, **overrides.get(job["job_id"], {})} for job in feed_jobs]
     jobs = [*store.pasted_jobs(user["id"]), *feed_jobs]
     matched = match_jobs(user["profile"], jobs)
+    query = q.strip().casefold()[:120]
+    if query:
+        matched = [job for job in matched if query in " ".join((job["title"], job["company"], *job.get("matched_skills", []), *job.get("required_skills", []))).casefold()]
     # Keep manually completed listings in view even if their new requirements
     # lower the preliminary match and the feed contains thousands of roles.
     matched.sort(key=lambda job: (job["source"] != "pasted", job["job_id"] not in overrides))
     return {"jobs": matched[:40], "total_available": len(matched), "feed": feed_status}
+
+
+@app.get("/api/saved-jobs")
+def saved_jobs(user=Depends(current_user)):
+    return {"jobs": store.saved_jobs(user["id"])}
+
+
+@app.put("/api/saved-jobs/{job_id}")
+def save_job(job_id: str, user=Depends(current_user)):
+    if not user["profile"]["completed"]:
+        raise HTTPException(409, "Complete your profile first")
+    feed_jobs, _ = feed.get()
+    jobs = [*store.pasted_jobs(user["id"]), *feed_jobs]
+    job = next((item for item in jobs if item["job_id"] == job_id), None)
+    if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
+        raise HTTPException(404, "Job is unavailable for this candidate")
+    store.save_job(user["id"], {key: job.get(key) for key in ("job_id", "source", "source_url", "track", "title", "company", "locations")})
+    return {"saved": True}
+
+
+@app.delete("/api/saved-jobs/{job_id}", status_code=204)
+def unsave_job(job_id: str, user=Depends(current_user)):
+    store.unsave_job(user["id"], job_id)
+    return Response(status_code=204)
 
 
 @app.put("/api/jobs/{job_id}/description")
@@ -444,6 +475,11 @@ def create_case(body: NewCase, user=Depends(current_user)):
     case_id = str(uuid4())
     store.put_case(case_id, user["id"], {"case_id": case_id, "candidate": candidate_export(user), "job": job, "projects": projects})
     return {"case_id": case_id, "status": "pending" if any(item["evaluation_id"] for item in projects) else "partial"}
+
+
+@app.get("/api/cases")
+def list_cases(user=Depends(current_user)):
+    return {"cases": store.list_cases(user["id"])}
 
 
 @app.get("/api/cases/{case_id}")
