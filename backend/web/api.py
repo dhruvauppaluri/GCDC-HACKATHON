@@ -21,6 +21,7 @@ from .imports import import_github, import_website, validate_public_url
 from .cases import hydrate_case, start_depth
 from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
 from .review import review_inputs, run_review
+from .gemini_client import gemini_keys_available
 from .requirements import EXTRACTION_VERSION, extract_requirements
 from .simplify_feed import SimplifyFeed
 from .storage import Store
@@ -424,7 +425,7 @@ def create_case(body: NewCase, user=Depends(current_user)):
         job = feed.enrich_now(job)
     if job.get("description") and job.get("source") in {"simplify", "pasted"}:
         job = dict(job)
-        if os.getenv("GEMINI_API_KEY"):
+        if gemini_keys_available():
             model = os.getenv("RESEARCH_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"))
             try:
                 cache_key = sha256("\0".join((EXTRACTION_VERSION, model, job["title"], job["company"], job["description"])).encode()).hexdigest()

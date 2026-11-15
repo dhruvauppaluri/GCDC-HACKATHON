@@ -7,6 +7,14 @@ from backend.depth import gemini_adapter
 from backend.web import gemini_client
 
 
+@pytest.fixture(autouse=True)
+def isolated_key_pool(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY_2", raising=False)
+    with gemini_client._KEY_LOCK:
+        gemini_client._NEXT_KEY = 0
+        gemini_client._COOLDOWN_UNTIL.clear()
+
+
 def _response(body, status=200):
     return httpx.Response(status, json=body, request=httpx.Request("POST", "https://generativelanguage.googleapis.com"))
 
@@ -73,3 +81,56 @@ def test_gemini_retries_transient_server_failure(monkeypatch):
     monkeypatch.setattr(gemini_client.httpx, "post", fake_post)
     assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
     assert len(attempts) == 3
+
+
+def test_two_keys_are_balanced_across_calls(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "first-key")
+    monkeypatch.setenv("GEMINI_API_KEY_2", "second-key")
+    sent = []
+    def fake_post(_url, **kwargs):
+        sent.append(kwargs["headers"]["x-goog-api-key"])
+        return _response({"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}]})
+    monkeypatch.setattr(gemini_client.httpx, "post", fake_post)
+    for _ in range(4):
+        assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+    assert sent == ["first-key", "second-key", "first-key", "second-key"]
+
+
+def test_quota_on_one_key_falls_back_to_other_and_cools_down(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "first-key")
+    monkeypatch.setenv("GEMINI_API_KEY_2", "second-key")
+    sent = []
+    def fake_post(_url, **kwargs):
+        key = kwargs["headers"]["x-goog-api-key"]
+        sent.append(key)
+        return (_response({"error": {"status": "RESOURCE_EXHAUSTED", "message": "quota_exceeded"}}, 429)
+                if key == "first-key" else
+                _response({"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}]}))
+    monkeypatch.setattr(gemini_client.httpx, "post", fake_post)
+    assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+    assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+    assert sent == ["first-key", "second-key", "second-key"]
+
+
+def test_secondary_key_works_without_primary(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY_2", "second-key")
+    monkeypatch.setattr(gemini_client.httpx, "post", lambda _url, **kwargs: _response({
+        "candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}]}))
+    assert gemini_client.gemini_keys_available()
+    assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+
+
+def test_repeated_service_error_falls_back_to_secondary(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "first-key")
+    monkeypatch.setenv("GEMINI_API_KEY_2", "second-key")
+    monkeypatch.setattr(gemini_client.time, "sleep", lambda _: None)
+    sent = []
+    def fake_post(_url, **kwargs):
+        key = kwargs["headers"]["x-goog-api-key"]
+        sent.append(key)
+        return (_response({"error": "temporary"}, 503) if key == "first-key" else
+                _response({"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}]}))
+    monkeypatch.setattr(gemini_client.httpx, "post", fake_post)
+    assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+    assert sent == ["first-key", "first-key", "first-key", "second-key"]

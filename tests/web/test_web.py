@@ -104,6 +104,25 @@ def test_full_review_assesses_every_saved_github_repo_even_if_unselected(client,
     assert len(stored["candidate"]["projects"]) == 7
 
 
+def test_pasted_case_accepts_secondary_gemini_key_only(client, monkeypatch):
+    signup(client)
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    api.store.update_profile(user_id, {"target_tracks": ["CS"], "skills": {"CS": {"Python": 3}},
+                                       "completed": True, "projects": [{"id": "resume:one", "source": "resume",
+                                       "title": "API", "summary": "Built a Python API", "selected": True}]})
+    description = "Software engineering internship. Required: Python API development and testing. Preferred: SQL experience."
+    saved = client.post("/api/jobs/pasted", json={"title": "Software Intern", "company": "Example",
+                                                  "track": "software", "description": description})
+    assert saved.status_code == 201
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY_2", "secondary-test-key")
+    monkeypatch.setattr(api, "start_depth", lambda *_args: None)
+    monkeypatch.setattr(api, "extract_requirements", lambda *_args: [{"id": "required:1", "kind": "required",
+                          "text": "Python API development", "source_quote": "Python API development", "alternatives": []}])
+    case_id = client.post("/api/cases", json={"job_id": saved.json()["job"]["job_id"]}).json()["case_id"]
+    assert client.get(f"/api/cases/{case_id}").json()["job"]["requirements_status"] == "source_checked"
+
+
 def test_signup_login_resume_and_return(client):
     signup(client)
     assert client.post("/api/auth/signup", json={"email": "new@example.com", "password": "DemoPass123!"}).status_code == 409

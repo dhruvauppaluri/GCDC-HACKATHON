@@ -41,6 +41,7 @@ def test_gemini_judge_receives_both_lawyers_and_paralegal(monkeypatch):
     assert calls[0][1]["skeptic"] == negative
     assert calls[0][1]["paralegal_claim_signals"][0]["signal"] == "Python"
     assert calls[0][1]["documented_coverage"]["match_score"] == 75
+    assert decision["eligibility_note"].startswith("Eligibility remains unverified")
 
 
 def test_judge_rejects_invented_citation_and_uncited_strength(monkeypatch):

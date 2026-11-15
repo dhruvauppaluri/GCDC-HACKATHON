@@ -108,5 +108,8 @@ def adjudicate(inputs: dict, positive: dict, negative: dict, baseline: dict,
                "lawyer_errors": lawyer_errors or {}}
     result = (generate_json(SYSTEM, content, SCHEMA, model_env="JUDGE_GEMINI_MODEL")
               if provider == "gemini" else _ollama_json(SYSTEM, content, model))
+    validated = _validate(result, inputs, supplied_ids)
+    if baseline["eligibility"] == "unknown":
+        validated["eligibility_note"] = "Eligibility remains unverified. Check the job's stated conditions directly."
     return {"status": "complete", "provider": provider, "model": model,
-            **_validate(result, inputs, supplied_ids)}
+            **validated}
