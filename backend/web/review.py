@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from data.fixtures.rishi.swe_paralegal import extract
 from prototypes.harsh.lawyers import lawyers
 from .jobs import SKILL_OPTIONS
-from .judge import judge_case
+from .judge import EQUIVALENT_TERMS, affirmative_mention, judge_case
 from .judge_agent import adjudicate
 from .gemini_lawyer import review_with_gemini
 from .evidence_selection import select_lawyer_evidence
@@ -63,13 +63,18 @@ def review_inputs(bundle: dict) -> dict:
         resume_text = candidate.get("resume_text", "")
         signals = []
         for skill in SKILL_OPTIONS.get(track, []):
-            found = re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", resume_text, re.I)
+            found = next((match for term in (skill, *EQUIVALENT_TERMS.get(skill.casefold(), ()))
+                          if (match := re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", resume_text, re.I))), None)
             if found:
                 start, end = max(0, found.start() - 90), min(len(resume_text), found.end() + 90)
                 quote = ("…" if start else "") + resume_text[start:end].strip() + ("…" if end < len(resume_text) else "")
-                signals.append({"signal": skill, "terms": [skill], "field": "resume", "quote": quote})
+                signals.append({"signal": skill, "terms": [found.group()], "field": "resume", "quote": quote})
         paralegal = {"id": candidate["candidate_id"], "source": "local_track_terms", "evidence": signals}
     if paralegal:
+        paralegal["evidence"] = [
+            item for item in paralegal["evidence"]
+            if any(affirmative_mention(term, item["quote"]) for term in item.get("terms", []))
+        ]
         for index, item in enumerate(paralegal["evidence"], 1):
             evidence.append({
                 "id": f"paralegal:{index}", "source": "resume_claim",
@@ -86,6 +91,31 @@ def review_inputs(bundle: dict) -> dict:
         "evidence": evidence, "depth_projects": depth_projects,
         "paralegal": paralegal, "synthetic_comparisons": comparisons,
         "actual_depth_modes": depth_modes,
+    }
+
+
+def _filter_unmatched_claim_strengths(inputs: dict, positive: dict) -> dict:
+    """Keep self-reported strengths only when they support a scored qualification."""
+    if inputs["job"].get("requirements_status") != "source_checked":
+        return positive
+    empty = {category: [] for category in lawyers.CATEGORIES}
+    matched_claim_ids = set()
+    for item in inputs["evidence"]:
+        if item["source"] != "resume_claim":
+            continue
+        claim_case = {**inputs, "evidence": [item], "depth_projects": []}
+        assessed = judge_case(claim_case, empty, empty)["requirements"]
+        if any(requirement["status"] == "candidate claim" for requirement in assessed):
+            matched_claim_ids.add(item["id"])
+    sources = {item["id"]: item["source"] for item in inputs["evidence"]}
+    return {
+        category: [
+            point for point in points
+            if point["kind"] != "supported_claim"
+            or any(evidence_id in matched_claim_ids or sources.get(evidence_id, "").startswith("depth_")
+                   for evidence_id in point["evidence_ids"])
+        ]
+        for category, points in positive.items()
     }
 
 
@@ -119,6 +149,7 @@ def run_review(inputs: dict) -> dict:
         except Exception as error:
             independent_negative = empty
             errors["negative"] = str(error)
+    positive = _filter_unmatched_claim_strengths(inputs, positive)
     negative = lawyers.clean_negative(
         independent_negative,
         positive, requirements,

@@ -7,6 +7,11 @@ import re
 
 from prototypes.harsh.lawyers.lawyers import CATEGORIES
 
+EQUIVALENT_TERMS = {
+    "automated testing": ("pytest", "unit tests", "integration tests", "automated tests"),
+    "user research": ("user interviews", "customer interviews", "usability testing"),
+}
+
 
 def _tokens(value: str) -> set[str]:
     words = re.findall(r"[a-z0-9]+", value.casefold())
@@ -43,7 +48,7 @@ def _explicit_gap(point: dict, requirement: dict, citations: dict) -> bool:
 
 
 def _mentions(term: str, value: str) -> bool:
-    variants = {term}
+    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ())}
     if term.endswith("s") and len(term) > 4:
         variants.add(term[:-1])
     if term.endswith("ies") and len(term) > 5:
@@ -52,9 +57,9 @@ def _mentions(term: str, value: str) -> bool:
                for option in variants)
 
 
-def _affirmative_mention(term: str, value: str) -> bool:
+def affirmative_mention(term: str, value: str) -> bool:
     """Do not turn an explicit absence or future plan into a current skill claim."""
-    variants = {term}
+    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ())}
     if term.endswith("s") and len(term) > 4:
         variants.add(term[:-1])
     if term.endswith("ies") and len(term) > 5:
@@ -62,8 +67,13 @@ def _affirmative_mention(term: str, value: str) -> bool:
     for option in variants:
         pattern = r"(?<!\w)" + re.escape(option) + r"(?:s)?(?!\w)"
         for match in re.finditer(pattern, value, re.I):
-            context = value[max(0, match.start() - 45):match.start()]
-            if not re.search(r"\b(?:no|without|lacks?|not proficient in|not experienced in|planned|learning|in progress)\b[^.;\n]{0,35}$", context, re.I):
+            context = value[max(0, match.start() - 120):match.start()]
+            clause = re.split(r"[.;\n]|\b(?:but|however)\b", context, flags=re.I)[-1]
+            clause = re.sub(r"\bnot\s+(?:only|just|merely)\b|\bno\s+(?:issues?|problems?)\b", "", clause, flags=re.I)
+            if not re.search(
+                r"\b(?:no|without|lack(?:s|ing)?|never|not|learning|planned|planning|in progress|will learn|hope to|don['’]t|doesn['’]t|didn['’]t|haven['’]t|hasn['’]t|can['’]t|couldn['’]t)\b",
+                clause, re.I,
+            ):
                 return True
     return False
 
@@ -87,7 +97,7 @@ def _direct_coverage(requirement: dict, inputs: dict, citations: dict) -> tuple[
                 return 1.0, "inspected artifact", ids
     claims = [item for item in inputs["evidence"] if item["source"] == "resume_claim"]
     for item in claims:
-        if sum(_affirmative_mention(term, item.get("excerpt", "")) for term in terms) >= minimum:
+        if sum(affirmative_mention(term, item.get("excerpt", "")) for term in terms) >= minimum:
             return 0.5, "candidate claim", [item["id"]]
     return 0.0, "not_shown", []
 

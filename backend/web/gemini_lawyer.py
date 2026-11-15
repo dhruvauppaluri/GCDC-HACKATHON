@@ -25,6 +25,10 @@ An artifact_evidence point needs a cited Depth repository or document excerpt.
 The skeptic should mark missing information as unknown, not a proven gap.
 Do not treat missing internships or unrequested tools as weaknesses.
 Do not infer poor ability from missing evidence. Do not invent strengths.
+Empty arrays are appropriate when the evidence supports no job requirement.
+The advocate must connect each strength to a stated required or preferred qualification.
+Interest in the role, general education, and skills being learned are not demonstrated qualifications.
+The skeptic must not add a professional-experience requirement unless the job states one.
 Depth ratings show project evidence, not authorship or job fit.
 Form your argument independently from the shared case evidence."""
     result = generate_json(system, {"requirements": requirements, "evidence": evidence,

@@ -55,3 +55,14 @@ def test_judge_rejects_invented_citation_and_uncited_strength(monkeypatch):
     invented["strengths"][0]["evidence_ids"] = []
     with pytest.raises(ValueError, match="needs cited evidence"):
         judge_agent.adjudicate(inputs, positive, negative, baseline)
+
+
+def test_judge_does_not_present_uncovered_requirement_as_strength(monkeypatch):
+    inputs, positive, negative, baseline = fixture_case()
+    baseline["match_score"] = 0
+    baseline["requirements"][0]["coverage"] = 0
+    baseline["requirements"][0]["status"] = "not_shown"
+    monkeypatch.setenv("JUDGE_PROVIDER", "gemini")
+    monkeypatch.setattr(judge_agent, "generate_json", lambda *_args, **_kwargs: output())
+    decision = judge_agent.adjudicate(inputs, positive, negative, baseline)
+    assert decision["strengths"] == []

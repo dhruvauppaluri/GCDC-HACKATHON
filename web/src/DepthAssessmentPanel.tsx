@@ -8,7 +8,6 @@ export type DepthAssessment = {
     project_summary: string
     dimensions: Record<string, { score: number; evidence_ids: string[] } | null>
     demonstrated_skills: { skill: string; evidence_ids: string[] }[]
-    limitations: string[]
   } | null
 }
 
@@ -30,7 +29,6 @@ export default function DepthAssessmentPanel({ assessment }: { assessment: Depth
       <div className="depth-criteria">{Object.entries(result.dimensions).map(([name, rating]) => <div key={name}><strong>{criterionLabels[name] || name.replaceAll('_', ' ')}</strong><span>{rating ? `${rating.score}/4` : 'Not enough evidence'}</span></div>)}</div>
       {result.demonstrated_skills.length > 0 && <div className="depth-concepts"><strong>Concepts shown</strong><div className="parsed-tags"><div>{result.demonstrated_skills.map(item => <span className="tag" key={item.skill}>{item.skill}</span>)}</div></div></div>}
       {result.project_summary && <details className="review-details"><summary>Project summary</summary><p>{result.project_summary}</p></details>}
-      {result.limitations.length > 0 && <details className="review-details"><summary>Assessment limits</summary><ul>{result.limitations.map((limit, index) => <li key={index}>{limit}</li>)}</ul></details>}
     </> : <p className="muted">{assessment.error || 'Waiting for project assessment.'}</p>}
   </section>
 }
