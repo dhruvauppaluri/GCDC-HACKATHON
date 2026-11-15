@@ -1,4 +1,4 @@
-"""Candidate-owned handoff from selected projects to the Depth service."""
+"""Candidate-owned handoff from profile projects to the Depth service."""
 import os
 
 import httpx

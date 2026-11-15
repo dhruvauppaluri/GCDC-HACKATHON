@@ -312,15 +312,20 @@ def add_resume_project(body: ResumeProject, user=Depends(current_user)):
     return {"project": project, "projects": projects}
 
 
+def assessed_projects(profile: dict) -> list[dict]:
+    """Inspect every saved GitHub repository plus explicitly selected other work."""
+    return [item for item in profile["projects"] if item.get("source") == "github" or item.get("selected")]
+
+
 def candidate_export(user):
-    """Snapshot of candidate claims and selected project context."""
+    """Snapshot of candidate claims and the project portfolio used in review."""
     p = user["profile"]
     return {
         "candidate_id": user["id"], "first_name": p["first_name"], "last_name": p["last_name"],
         "target_tracks": [TRACKS[t] for t in p["target_tracks"] if t in TRACKS],
         "interests": p["interests"], "resume_text": p["resume_text"],
         "skills": {TRACKS[t]: values for t, values in p["skills"].items() if t in TRACKS},
-        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title", "contribution"}} for item in p["projects"] if item.get("selected")],
+        "projects": [{key: value for key, value in item.items() if key in {"source", "url", "summary", "title", "contribution"}} for item in assessed_projects(p)],
         "links": {key: p[key] for key in ("linkedin_url", "github_url", "website_url")},
     }
 
@@ -397,11 +402,11 @@ def save_pasted_job(body: PastedJob, user=Depends(current_user)):
 def create_case(body: NewCase, user=Depends(current_user)):
     if not user["profile"]["completed"]:
         raise HTTPException(409, "Complete your profile first")
-    selected = [item for item in user["profile"]["projects"] if item.get("selected")]
-    if not selected:
-        raise HTTPException(422, "Select at least one project first")
-    if len(selected) > 5:
-        raise HTTPException(422, "Select at most five projects")
+    projects_to_assess = assessed_projects(user["profile"])
+    if not projects_to_assess:
+        raise HTTPException(422, "Add a GitHub repository or select a project first")
+    if len(projects_to_assess) > 16:
+        raise HTTPException(422, "At most 16 profile projects can be assessed in one review")
     source = os.getenv("RESEARCH_JOBS_FILE")
     feed_jobs, _ = feed.get()
     overrides = store.job_description_overrides(user["id"])
@@ -416,7 +421,7 @@ def create_case(body: NewCase, user=Depends(current_user)):
     if job.get("source") == "simplify" and job.get("description_status") != "user_supplied":
         job = feed.enrich_now(job)
     projects = []
-    for project in selected:
+    for project in projects_to_assess:
         try:
             projects.append({"project": project, "evaluation_id": start_depth(project, job["track"])})
         except (httpx.HTTPError, ValueError, KeyError) as exc:

@@ -5,7 +5,7 @@ This guide describes the integration surface on Dhruva's draft [Depth integratio
 ## What is ready
 
 - The candidate profile accepts GitHub and personal website links, imports their public projects, and lets the candidate select projects and describe their own contribution. A candidate can also manually add a resume project; that entry remains a claim.
-- `POST /api/cases` takes a job ID for an authenticated, completed candidate. It snapshots the candidate, the job, and up to five selected projects, then starts a Depth evaluation for each. `GET /api/cases/{case_id}` returns a `schema_version: 1` bundle. See `backend/web/api.py` and `backend/web/cases.py`.
+- `POST /api/cases` takes a job ID for an authenticated, completed candidate. It snapshots the candidate, the job, and every saved GitHub repository plus selected website/résumé projects, up to 16 projects total, then starts a Depth evaluation for each. `GET /api/cases/{case_id}` returns a `schema_version: 1` bundle. See `backend/web/api.py` and `backend/web/cases.py`.
 - Each project assessment retains its source URL, candidate contribution, status, Depth result, and error if any. GitHub evidence is pinned to a commit; website text and resume claims are labeled separately. Partial import or Depth failure does not delete a selected link.
 - `citations` gives each Depth excerpt a unique `ref` of the form `depth:<evaluation_id>:<evidence_id>`. Ratings inside a Depth result use the local evidence ID, so resolve them against that assessment's evaluation ID before citing them across projects.
 - `preparation` lists exact required-skill name matches to demonstrated project skills and follow-up questions. Treat its “without project evidence” list as an evidence gap, **not** proof that the candidate lacks a skill.
@@ -14,7 +14,7 @@ The case endpoint requires the candidate's session cookie. For a Lawyer running 
 
 ## Branches and integration order (November 13)
 
-- `agent/dhruva/depth-integration` is draft PR #3. It provides the profile links, selected-project case bundle, track-specific Depth rubric, and the website display.
+- `agent/dhruva/depth-integration` is draft PR #3. It provides the profile links, full-repository case bundle, track-specific Depth rubric, and the website display.
 - `agent/rishi/swe-intern-data` provides 60 **synthetic SWE** applications, a fixture-specific keyword Paralegal extractor, and a separate Lawyer citation-verification experiment. The simulated `demo_labels` are calibration data only and must not enter the runtime evidence bundle.
 - `agent/harsh/lawyers-prototype` provides the two local Ollama Lawyers and a `--case` mode that reads the versioned case bundle. It validates citation IDs and distinguishes candidate claims from inspected artifacts. It is a CLI prototype, not a web endpoint or Judge.
 
@@ -37,6 +37,6 @@ Integrate in this order:
 
 ## Local check and acceptance
 
-Run the two services as described in the [README](../README.md): Depth on port 8000, website on port 8010. Use `DEPTH_INTEGRATION_MODE=codex` for real local analysis; default `mock` leaves arbitrary projects unassessed. The Depth process needs a writable, authenticated Codex state directory; if a restricted session blocks its local state, follow the README's `DEPTH_CODEX_HOME` setup and rerun `mode=codex`. A controlled evaluator response verifies the Lawyer handoff but does not verify live Depth scoring. Complete a candidate profile, select a GitHub or website project, choose a role, and select **Assess selected projects**. Inspect the authenticated case response and its `project_assessments`, `citations`, and `preparation` fields.
+Run the two services as described in the [README](../README.md): Depth on port 8000, website on port 8010. Use `DEPTH_INTEGRATION_MODE=codex` for real local analysis; default `mock` leaves arbitrary projects unassessed. The Depth process needs a writable, authenticated Codex state directory; if a restricted session blocks its local state, follow the README's `DEPTH_CODEX_HOME` setup and rerun `mode=codex`. A controlled evaluator response verifies the Lawyer handoff but does not verify live Depth scoring. Complete a candidate profile, import GitHub repositories or select a website/résumé project, choose a role, and select **Interested**. Inspect the authenticated case response and its `project_assessments`, `citations`, and `preparation` fields.
 
 Before calling the pipeline integrated, verify: a CS candidate and job reach both Lawyers and Judge; GitHub and website URLs and contribution claims survive; every argument resolves to a source reference; claim-only and partial cases produce uncertainty rather than invented findings; one candidate cannot read another's case; and synthetic labels never enter a live verdict. Add HW and PM examples after the first CS path works. The three track calibration examples still require a human reviewer and date; none is currently labeled as human reviewed.

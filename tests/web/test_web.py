@@ -63,6 +63,36 @@ def test_inline_description_updates_same_feed_role_and_case_for_one_user(client,
     assert other_job["description_status"] == "listing_only"
 
 
+def test_full_review_assesses_every_saved_github_repo_even_if_unselected(client, monkeypatch):
+    signup(client)
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    repositories = [{"id": f"github:ada/repo-{i}", "source": "github", "title": f"repo-{i}",
+                     "url": f"https://github.com/ada/repo-{i}", "summary": "Public project",
+                     "selected": False} for i in range(6)]
+    resume = {"id": "resume:one", "source": "resume", "title": "Resume project", "url": "",
+              "summary": "Built a service", "selected": True}
+    website = {"id": "website:one", "source": "website", "title": "Portfolio", "url": "https://example.com",
+               "summary": "Portfolio", "selected": False}
+    api.store.update_profile(user_id, {"target_tracks": ["CS"], "skills": {"CS": {"Python": 3}},
+                                       "projects": [*repositories, resume, website], "completed": True})
+    listing = {"job_id": "simplify:one", "track": "software", "title": "Software Intern", "company": "Example",
+               "source": "simplify", "source_url": "https://example.com/job", "description_status": "fetched",
+               "description": "Build Python services. Requirements include Python and testing experience.",
+               "required_skills": ["Python"], "preferred_skills": []}
+    monkeypatch.setattr(api.feed, "get", lambda: ([listing], {"count": 1}))
+    calls = []
+    def start(project, track):
+        calls.append(project["id"])
+        return f"evaluation-{len(calls)}"
+    monkeypatch.setattr(api, "start_depth", start)
+    response = client.post("/api/cases", json={"job_id": listing["job_id"]})
+    assert response.status_code == 202
+    assert calls == [*(repo["id"] for repo in repositories), resume["id"]]
+    stored = api.store.get_case(response.json()["case_id"], user_id)
+    assert len(stored["projects"]) == 7
+    assert len(stored["candidate"]["projects"]) == 7
+
+
 def test_signup_login_resume_and_return(client):
     signup(client)
     assert client.post("/api/auth/signup", json={"email": "new@example.com", "password": "DemoPass123!"}).status_code == 409
@@ -196,11 +226,11 @@ def test_selected_project_case_handoff_and_user_isolation(client, monkeypatch):
     assert added.status_code == 200
     resume_id = added.json()["project"]["id"]
     assert added.json()["project"]["source"] == "resume"
+    assert client.post("/api/cases", json={"job_id": "cs-1"}).status_code == 422
     monkeypatch.setattr(api, "import_github", lambda _: [{"id": "github:ada/api", "source": "github", "title": "API", "url": "https://github.com/ada/api", "summary": "A Python API", "selected": False}])
     client.patch("/api/profile/links", json={"github_url": "https://github.com/ada"})
     client.post("/api/profile/import")
     assert {p["id"] for p in client.get("/api/me").json()["profile"]["projects"]} == {"github:ada/api", resume_id}
-    assert client.post("/api/cases", json={"job_id": "cs-1"}).status_code == 422
     client.patch("/api/profile/projects", json={"selected_ids": ["github:ada/api"], "contributions": {"github:ada/api": "I implemented the API endpoints"}})
     started = []
     def fake_start(project, track):
