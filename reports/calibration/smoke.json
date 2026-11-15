@@ -1,0 +1,596 @@
+{
+ "matcher": "semantic-v1",
+ "paralegal": "paralegal-v2",
+ "seeds": 1,
+ "verifier": "gemini",
+ "note": "Levels are synthetic by construction, not human labels.",
+ "pass1": {
+  "by_level": {
+   "cracked": {
+    "n": 2,
+    "mean": 86,
+    "sd": 0.0,
+    "min": 86,
+    "max": 86
+   },
+   "strong": {
+    "n": 2,
+    "mean": 86,
+    "sd": 0.0,
+    "min": 86,
+    "max": 86
+   },
+   "solid": {
+    "n": 2,
+    "mean": 80.5,
+    "sd": 2.5,
+    "min": 78,
+    "max": 83
+   },
+   "average": {
+    "n": 2,
+    "mean": 64.5,
+    "sd": 11.5,
+    "min": 53,
+    "max": 76
+   },
+   "weak": {
+    "n": 2,
+    "mean": 12.5,
+    "sd": 12.5,
+    "min": 0,
+    "max": 25
+   },
+   "stuffed": {
+    "n": 2,
+    "mean": 27.5,
+    "sd": 12.5,
+    "min": 15,
+    "max": 40
+   },
+   "learning_only": {
+    "n": 2,
+    "mean": 5,
+    "sd": 5.0,
+    "min": 0,
+    "max": 10
+   },
+   "irrelevant": {
+    "n": 2,
+    "mean": 0,
+    "sd": 0.0,
+    "min": 0,
+    "max": 0
+   }
+  },
+  "per_track": {
+   "PM": {
+    "spearman_level_vs_score": 0.937,
+    "adjacent_level_inversions": "2/14"
+   }
+  },
+  "checks": {
+   "stuffed_below_average": true,
+   "learning_only_below_15": true,
+   "irrelevant_below_10": true,
+   "cracked_at_least_85": true,
+   "strong_above_solid_above_average": true,
+   "max_within_level_sd_le_8": false
+  },
+  "failed_scores": []
+ },
+ "rows": [
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 1,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 2,
+   "seed": 0,
+   "score": 15,
+   "low": 6,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 3,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 4,
+   "seed": 0,
+   "score": 53,
+   "low": 46,
+   "coverage": {
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 5,
+   "seed": 0,
+   "score": 78,
+   "low": 78,
+   "coverage": {
+    "Experience with user research": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 6,
+   "seed": 0,
+   "score": 86,
+   "low": 86,
+   "coverage": {
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 7,
+   "seed": 0,
+   "score": 86,
+   "low": 86,
+   "coverage": {
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 1,
+   "seed": 0,
+   "score": 10,
+   "low": 0,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 2,
+   "seed": 0,
+   "score": 40,
+   "low": 30,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 3,
+   "seed": 0,
+   "score": 25,
+   "low": 15,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 4,
+   "seed": 0,
+   "score": 76,
+   "low": 69,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 5,
+   "seed": 0,
+   "score": 83,
+   "low": 83,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.571,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 6,
+   "seed": 0,
+   "score": 86,
+   "low": 86,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 7,
+   "seed": 0,
+   "score": 86,
+   "low": 86,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  }
+ ]
+}

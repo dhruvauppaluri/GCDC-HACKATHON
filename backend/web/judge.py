@@ -3,9 +3,12 @@
 The score describes how well the supplied application *documents* a match.
 It must not be interpreted as a prediction of hiring or of a person's ability.
 """
+import os
 import re
 
 from prototypes.harsh.lawyers.lawyers import CATEGORIES
+
+from . import matching, ontology
 
 EQUIVALENT_TERMS = {
     "automated testing": ("pytest", "unit tests", "integration tests", "automated tests"),
@@ -48,7 +51,7 @@ def _explicit_gap(point: dict, requirement: dict, citations: dict) -> bool:
 
 
 def _mentions(term: str, value: str) -> bool:
-    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ())}
+    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ()), *ontology.equivalent_terms(term)}
     if term.endswith("s") and len(term) > 4:
         variants.add(term[:-1])
     if term.endswith("ies") and len(term) > 5:
@@ -59,7 +62,7 @@ def _mentions(term: str, value: str) -> bool:
 
 def affirmative_mention(term: str, value: str) -> bool:
     """Do not turn an explicit absence or future plan into a current skill claim."""
-    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ())}
+    variants = {term, *EQUIVALENT_TERMS.get(term.casefold(), ()), *ontology.equivalent_terms(term)}
     if term.endswith("s") and len(term) > 4:
         variants.add(term[:-1])
     if term.endswith("ies") and len(term) > 5:
@@ -102,7 +105,45 @@ def _direct_coverage(requirement: dict, inputs: dict, citations: dict) -> tuple[
     return 0.0, "not_shown", []
 
 
+def _semantic_score(inputs: dict, common: dict, requirements: list[dict]) -> dict:
+    """Graded, source-checked coverage with a quote-validated verifier (see matching.py)."""
+    evidence = inputs.get("full_evidence") or inputs["evidence"]
+    assessed = []
+    for requirement in requirements:
+        result = matching.assess_requirement(requirement, evidence)
+        assessed.append({"id": requirement["id"], "text": requirement["text"], "kind": requirement["kind"],
+                         "alternatives": requirement.get("alternatives", []), "source_quote": requirement.get("source_quote"),
+                         **result})
+
+    def score_for(key: str) -> float:
+        req = matching.class_score([a for a in assessed if a["kind"] == "required"], key)
+        pref = matching.class_score([a for a in assessed if a["kind"] == "preferred"], key)
+        return matching.combine(req, pref)
+
+    score = round(score_for("coverage"))
+    low = round(score_for("coverage_without_related"))
+    req_cov = matching.class_score([a for a in assessed if a["kind"] == "required"], "coverage")
+    pref_cov = matching.class_score([a for a in assessed if a["kind"] == "preferred"], "coverage")
+    verdict = ("strong_documented_match" if score >= 80 else "promising_documented_match" if score >= 60
+               else "partial_documented_match" if score >= 40 else "limited_documented_match")
+    artifact = sum(a["status"] == "inspected artifact" for a in assessed)
+    return {**common, "version": "local-trial-v4", "match_score": score, "verdict": verdict,
+            "score_range": {"low": min(low, score), "high": score},
+            "confidence": "medium" if matching.semantic_available() and artifact * 2 >= len(assessed) else "low",
+            "requirements": assessed,
+            "note": "Documented qualification coverage from source-checked job text and cited, quote-verified candidate evidence. "
+                    "Credit is graded by evidence source and by the depth the posting asks for. Lawyer arguments cannot add points. "
+                    "This score is not a hiring probability.",
+            "score_breakdown": {"requirement_coverage": score, "required_coverage": None if req_cov is None else round(100 * req_cov),
+                                "preferred_coverage": None if pref_cov is None else round(100 * pref_cov),
+                                "cited_support_quality": None, "weights": matching.CLASS_WEIGHT,
+                                "method": "semantic_verified_graded", "matcher_version": matching.MATCHER_VERSION,
+                                "verifier": "gemini" if matching.semantic_available() else "deterministic_ontology"}}
+
+
 def _source_checked_score(inputs: dict, common: dict, requirements: list[dict], citations: dict) -> dict:
+    if matching.semantic_available() or os.getenv("MATCHER", "").casefold() == "semantic":
+        return _semantic_score(inputs, common, requirements)
     assessed, total_weight, earned = [], 0, 0.0
     for requirement in requirements:
         coverage, status, ids = _direct_coverage(requirement, inputs, citations)
@@ -135,6 +176,7 @@ def judge_case(inputs: dict, positive: dict, negative: dict) -> dict:
     common = {
         "version": "local-trial-v2", "eligibility": eligibility,
         "strengths": pluses, "objections": minuses,
+        "eligibility_facts": [{**fact, "status": "candidate_reported_unverified"} for fact in inputs.get("candidate_facts", [])],
         "note": "Evidence-backed application feedback, not a hiring decision. A missing citation lowers documented match, not personal ability.",
     }
     if inputs["job"].get("description_status") == "listing_only":

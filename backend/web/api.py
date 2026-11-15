@@ -462,7 +462,7 @@ def preview_case_review(case_id: str, user=Depends(current_user)):
     bundle = hydrate_case(case)
     if bundle["status"] == "pending":
         raise HTTPException(409, "Project assessment is still running")
-    return review_inputs(bundle)
+    return {key: value for key, value in review_inputs(bundle).items() if key != "full_evidence"}
 
 
 def finish_case_review(case_id: str, inputs: dict):

@@ -12,6 +12,7 @@ from .judge import EQUIVALENT_TERMS, affirmative_mention, judge_case
 from .judge_agent import adjudicate
 from .gemini_lawyer import review_with_gemini
 from .evidence_selection import select_lawyer_evidence
+from . import paralegal as paralegal_v2
 
 
 def synthetic_comparisons(signals: set[str]) -> list[dict]:
@@ -44,12 +45,15 @@ def review_inputs(bundle: dict) -> dict:
     candidate, job, evidence, depth_projects = lawyers.case_inputs(lawyer_bundle)
     paralegal = None
     comparisons = []
-    if job.get("track") == "software":
-        project_claims = [
-            text for assessment in bundle.get("project_assessments", [])
-            for text in (assessment["project"].get("summary", ""), assessment["project"].get("contribution", ""))
-            if text
-        ]
+    project_claims = [
+        text for assessment in bundle.get("project_assessments", [])
+        for text in (assessment["project"].get("summary", ""), assessment["project"].get("contribution", ""))
+        if text
+    ]
+    paralegal = paralegal_v2.extract(candidate.get("resume_text", ""), project_claims)
+    if paralegal:
+        paralegal["id"] = candidate["candidate_id"]  # claim-level, span-validated evidence
+    elif job.get("track") == "software":
         paralegal = extract({
             "id": candidate["candidate_id"], "company": job.get("company", ""),
             "role": job.get("title", ""),
@@ -71,20 +75,25 @@ def review_inputs(bundle: dict) -> dict:
                 signals.append({"signal": skill, "terms": [found.group()], "field": "resume", "quote": quote})
         paralegal = {"id": candidate["candidate_id"], "source": "local_track_terms", "evidence": signals}
     if paralegal:
-        paralegal["evidence"] = [
-            item for item in paralegal["evidence"]
-            if any(affirmative_mention(term, item["quote"]) for term in item.get("terms", []))
-        ]
+        if paralegal.get("source") != paralegal_v2.PARALEGAL_VERSION:
+            paralegal["evidence"] = [
+                item for item in paralegal["evidence"]
+                if any(affirmative_mention(term, item["quote"]) for term in item.get("terms", []))
+            ]
         for index, item in enumerate(paralegal["evidence"], 1):
             evidence.append({
                 "id": f"paralegal:{index}", "source": "resume_claim",
                 "location": item["field"], "excerpt": item["quote"],
                 "signal": item["signal"], "terms": item["terms"],
+                **{key: item[key] for key in ("skills", "specific", "has_outcome", "ownership") if key in item},
             })
     requirements = (job.get("requirement_groups", []) if job.get("source") in {"simplify", "pasted"}
                     else lawyers.job_requirements(job))
+    full_evidence = list(evidence)  # scoring sees all evidence; only the Lawyer prompt is trimmed
     evidence = select_lawyer_evidence(bundle, requirements, evidence, depth_projects)
     return {
+        "full_evidence": full_evidence,
+        "candidate_facts": (paralegal or {}).get("facts", []),
         "case_id": bundle["case_id"], "candidate_id": candidate["candidate_id"],
         "job_id": job["job_id"], "job": job,
         "requirements": requirements,

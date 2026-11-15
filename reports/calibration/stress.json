@@ -1,0 +1,3170 @@
+{
+ "matcher": "semantic-v3",
+ "paralegal": "paralegal-v2",
+ "seeds": 2,
+ "verifier": "gemini",
+ "note": "Levels are synthetic by construction, not human labels.",
+ "pass1": {
+  "by_level": {
+   "cracked": {
+    "n": 12,
+    "mean": 99.9,
+    "sd": 0.3,
+    "min": 99,
+    "max": 100
+   },
+   "strong": {
+    "n": 12,
+    "mean": 97.8,
+    "sd": 1.9,
+    "min": 96,
+    "max": 100
+   },
+   "solid": {
+    "n": 12,
+    "mean": 86.8,
+    "sd": 9.8,
+    "min": 67,
+    "max": 100
+   },
+   "average": {
+    "n": 12,
+    "mean": 63.5,
+    "sd": 10.4,
+    "min": 40,
+    "max": 84
+   },
+   "weak": {
+    "n": 12,
+    "mean": 27.8,
+    "sd": 7.0,
+    "min": 16,
+    "max": 38
+   },
+   "stuffed": {
+    "n": 12,
+    "mean": 39.8,
+    "sd": 4.3,
+    "min": 27,
+    "max": 43
+   },
+   "learning_only": {
+    "n": 12,
+    "mean": 6.4,
+    "sd": 11.7,
+    "min": 0,
+    "max": 36
+   },
+   "irrelevant": {
+    "n": 12,
+    "mean": 1.7,
+    "sd": 3.7,
+    "min": 0,
+    "max": 10
+   }
+  },
+  "per_track": {
+   "CS": {
+    "spearman_level_vs_score": 0.966,
+    "adjacent_level_inversions": "3/28"
+   },
+   "HW": {
+    "spearman_level_vs_score": 0.943,
+    "adjacent_level_inversions": "4/28"
+   },
+   "PM": {
+    "spearman_level_vs_score": 0.937,
+    "adjacent_level_inversions": "6/28"
+   }
+  },
+  "checks": {
+   "stuffed_below_average": true,
+   "learning_only_below_15": true,
+   "irrelevant_below_10": true,
+   "cracked_at_least_85": true,
+   "strong_above_solid_above_average": true,
+   "max_within_level_sd_le_8": false
+  },
+  "failed_scores": []
+ },
+ "rerun_stability": {
+  "pairs": 96,
+  "mean_abs_diff": 17.45,
+  "max_abs_diff": 100,
+  "share_within_5_points": 0.708
+ },
+ "rows": [
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with FPGA development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with FPGA development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 1,
+   "seed": 0,
+   "score": 36,
+   "low": 23,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with FPGA development": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with FPGA development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 2,
+   "seed": 0,
+   "score": 38,
+   "low": 34,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 2,
+   "seed": 1,
+   "score": 42,
+   "low": 39,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 3,
+   "seed": 0,
+   "score": 32,
+   "low": 23,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 3,
+   "seed": 1,
+   "score": 16,
+   "low": 16,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with FPGA development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 4,
+   "seed": 0,
+   "score": 62,
+   "low": 46,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 4,
+   "seed": 1,
+   "score": 77,
+   "low": 77,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 5,
+   "seed": 0,
+   "score": 92,
+   "low": 92,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 5,
+   "seed": 1,
+   "score": 93,
+   "low": 93,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 6,
+   "seed": 0,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with FPGA development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 6,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with FPGA development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 7,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with FPGA development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "FPGA Design Engineer",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with SystemVerilog or Verilog": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with FPGA development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 1,
+   "seed": 0,
+   "score": 18,
+   "low": 9,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 2,
+   "seed": 0,
+   "score": 41,
+   "low": 31,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 2,
+   "seed": 1,
+   "score": 41,
+   "low": 31,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 3,
+   "seed": 0,
+   "score": 21,
+   "low": 11,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 3,
+   "seed": 1,
+   "score": 16,
+   "low": 16,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 4,
+   "seed": 0,
+   "score": 65,
+   "low": 61,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 4,
+   "seed": 1,
+   "score": 56,
+   "low": 43,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 5,
+   "seed": 0,
+   "score": 75,
+   "low": 66,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 5,
+   "seed": 1,
+   "score": 67,
+   "low": 67,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python scripting for test automation": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with simulation and verification": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 6,
+   "seed": 0,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 6,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 7,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "HW",
+   "jd": "Embedded Hardware Engineer",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with C or C++ for embedded systems": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with PCB design tools such as Altium or KiCad": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with hands-on debugging with oscilloscopes and lo": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python scripting for test automation": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with simulation and verification": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with data structures and algorithms": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with data structures and algorithms": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 1,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with data structures and algorithms": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with data structures and algorithms": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 2,
+   "seed": 0,
+   "score": 43,
+   "low": 43,
+   "coverage": {
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 2,
+   "seed": 1,
+   "score": 39,
+   "low": 39,
+   "coverage": {
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 3,
+   "seed": 0,
+   "score": 38,
+   "low": 34,
+   "coverage": {
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 3,
+   "seed": 1,
+   "score": 38,
+   "low": 34,
+   "coverage": {
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 4,
+   "seed": 0,
+   "score": 61,
+   "low": 51,
+   "coverage": {
+    "Experience with Python": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 4,
+   "seed": 1,
+   "score": 57,
+   "low": 57,
+   "coverage": {
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 5,
+   "seed": 0,
+   "score": 78,
+   "low": 68,
+   "coverage": {
+    "Experience with Python": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 5,
+   "seed": 1,
+   "score": 89,
+   "low": 89,
+   "coverage": {
+    "Experience with Python": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with software testing": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 6,
+   "seed": 0,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with Python": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with software testing": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 6,
+   "seed": 1,
+   "score": 99,
+   "low": 99,
+   "coverage": {
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with software testing": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 7,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with software testing": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "CS",
+   "jd": "Software Engineer",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with data structures and algorithms": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with software testing": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 0,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 1,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Git and collaborative development": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 0
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 2,
+   "seed": 0,
+   "score": 43,
+   "low": 43,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Linux command line": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 2,
+   "seed": 1,
+   "score": 27,
+   "low": 27,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 3,
+   "seed": 0,
+   "score": 32,
+   "low": 23,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 3,
+   "seed": 1,
+   "score": 32,
+   "low": 23,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 4,
+   "seed": 0,
+   "score": 40,
+   "low": 40,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Python": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Linux command line": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 4,
+   "seed": 1,
+   "score": 65,
+   "low": 61,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with Linux command line": [
+     0.357,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 5,
+   "seed": 0,
+   "score": 78,
+   "low": 68,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with Linux command line": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 5,
+   "seed": 1,
+   "score": 85,
+   "low": 85,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL and relational databases": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with Linux command line": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 6,
+   "seed": 0,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Linux command line": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 6,
+   "seed": 1,
+   "score": 99,
+   "low": 99,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Linux command line": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 7,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Linux command line": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "CS",
+   "jd": "Full Stack Engineer",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with React or a modern frontend framework": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Python": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Git and collaborative development": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with SQL and relational databases": [
+     1.0,
+     "inspected artifact"
+    ],
+    "Experience with Linux command line": [
+     1.0,
+     "inspected artifact"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 6
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 0,
+   "seed": 0,
+   "score": 10,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 1,
+   "seed": 0,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 2,
+   "seed": 0,
+   "score": 39,
+   "low": 39,
+   "coverage": {
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 2,
+   "seed": 1,
+   "score": 39,
+   "low": 39,
+   "coverage": {
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 3,
+   "seed": 0,
+   "score": 27,
+   "low": 27,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 3,
+   "seed": 1,
+   "score": 29,
+   "low": 16,
+   "coverage": {
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 4,
+   "seed": 0,
+   "score": 69,
+   "low": 65,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 4,
+   "seed": 1,
+   "score": 84,
+   "low": 80,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 5,
+   "seed": 0,
+   "score": 93,
+   "low": 93,
+   "coverage": {
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 5,
+   "seed": 1,
+   "score": 92,
+   "low": 92,
+   "coverage": {
+    "Experience with user research": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 6,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 6,
+   "seed": 1,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 7,
+   "seed": 0,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Associate Product Manager",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with prioritization and roadmapping": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with experimentation or A/B testing": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 0,
+   "seed": 0,
+   "score": 10,
+   "low": 0,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 0,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 1,
+   "seed": 0,
+   "score": 23,
+   "low": 23,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 1,
+   "seed": 1,
+   "score": 0,
+   "low": 0,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.0,
+     "not_shown"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 1
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 2,
+   "seed": 0,
+   "score": 43,
+   "low": 43,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 2,
+   "seed": 1,
+   "score": 43,
+   "low": 43,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 3,
+   "seed": 0,
+   "score": 27,
+   "low": 27,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 3
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 3,
+   "seed": 1,
+   "score": 25,
+   "low": 16,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 2
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 4,
+   "seed": 0,
+   "score": 65,
+   "low": 61,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.357,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 5
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 4,
+   "seed": 1,
+   "score": 61,
+   "low": 61,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     0.429,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.0,
+     "not_shown"
+    ],
+    "Experience with user research": [
+     0.429,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 4
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 5,
+   "seed": 0,
+   "score": 99,
+   "low": 99,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 5,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 6,
+   "seed": 0,
+   "score": 96,
+   "low": 96,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 6,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 7,
+   "seed": 0,
+   "score": 99,
+   "low": 99,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     0.857,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  },
+  {
+   "track": "PM",
+   "jd": "Technical Product Manager",
+   "level": 7,
+   "seed": 1,
+   "score": 100,
+   "low": 100,
+   "coverage": {
+    "Experience with cross-functional collaboration and stakehold": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with clear written and technical communication": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with analytics and metrics": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with SQL": [
+     1.0,
+     "candidate claim"
+    ],
+    "Experience with user research": [
+     1.0,
+     "candidate claim"
+    ]
+   },
+   "n_required": 3,
+   "n_claims": 7
+  }
+ ]
+}
