@@ -32,6 +32,7 @@ class Store:
             db.execute("CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS pasted_jobs (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
             db.execute("CREATE TABLE IF NOT EXISTS job_description_overrides (user_id TEXT NOT NULL, job_id TEXT NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(user_id, job_id), FOREIGN KEY(user_id) REFERENCES users(id))")
+            db.execute("CREATE TABLE IF NOT EXISTS requirement_extractions (key TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS reviews (case_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, status TEXT NOT NULL, payload TEXT, error TEXT, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id))")
 
     def connect(self):
@@ -123,6 +124,16 @@ class Store:
         with self.connect() as db:
             rows = db.execute("SELECT job_id,payload FROM job_description_overrides WHERE user_id=?", (user_id,)).fetchall()
         return {row["job_id"]: json.loads(row["payload"]) for row in rows}
+
+    def get_requirement_extraction(self, key: str) -> list[dict] | None:
+        with self.connect() as db:
+            row = db.execute("SELECT payload FROM requirement_extractions WHERE key=?", (key,)).fetchone()
+        return json.loads(row["payload"]) if row else None
+
+    def put_requirement_extraction(self, key: str, groups: list[dict]):
+        with self.lock, self.connect() as db:
+            db.execute("INSERT OR REPLACE INTO requirement_extractions VALUES (?,?,?)",
+                       (key, json.dumps(groups), utcnow().isoformat()))
 
     def put_review(self, case_id: str, user_id: str):
         with self.lock, self.connect() as db:

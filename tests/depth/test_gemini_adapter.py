@@ -60,3 +60,16 @@ def test_gemini_payment_error_explains_billing_without_echoing_body(monkeypatch)
     with pytest.raises(RuntimeError, match="prepay credits are depleted") as exc:
         gemini_client.generate_json("", {}, {"type": "object"})
     assert "private content" not in str(exc.value)
+
+
+def test_gemini_retries_transient_server_failure(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(gemini_client.time, "sleep", lambda _: None)
+    attempts = []
+    def fake_post(*_args, **_kwargs):
+        attempts.append(1)
+        return _response({"error": "temporary"}, 503) if len(attempts) < 3 else _response({
+            "candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}]})
+    monkeypatch.setattr(gemini_client.httpx, "post", fake_post)
+    assert gemini_client.generate_json("", {}, {"type": "object"}) == {}
+    assert len(attempts) == 3

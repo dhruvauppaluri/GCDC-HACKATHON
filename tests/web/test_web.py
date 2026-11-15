@@ -51,9 +51,20 @@ def test_inline_description_updates_same_feed_role_and_case_for_one_user(client,
     assert after["description_status"] == "user_supplied"
     assert after["description"] == description
     assert "Python" in after["matched_skills"]
-    assert "SQL" in after["skill_gaps"]
+    assert after["skill_gaps"] == []
     case_id = client.post("/api/cases", json={"job_id": job_id}).json()["case_id"]
     assert client.get(f"/api/cases/{case_id}").json()["job"]["description"] == description
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-only")
+    extractions = []
+    def extract(*_args):
+        extractions.append(1)
+        return [{"id": "required:1", "kind": "required", "text": "Python", "source_quote": "Python", "alternatives": ["Python"]}]
+    monkeypatch.setattr(api, "extract_requirements", extract)
+    for _ in range(2):
+        repeated_id = client.post("/api/cases", json={"job_id": job_id}).json()["case_id"]
+        assert client.get(f"/api/cases/{repeated_id}").json()["job"]["requirements_status"] == "source_checked"
+    assert len(extractions) == 1
 
     client.post("/api/auth/logout")
     client.post("/api/auth/signup", json={"email": "other@example.com", "password": "DemoPass123!"})

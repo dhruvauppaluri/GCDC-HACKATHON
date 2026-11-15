@@ -7,6 +7,7 @@ meaning and citations in the returned object; a schema only constrains shape.
 import json
 import os
 import re
+import time
 
 import httpx
 
@@ -42,9 +43,14 @@ def generate_json(system: str, content: dict, schema: dict, *, model_env: str = 
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     try:
-        response = httpx.post(url, headers={"x-goog-api-key": key}, json=payload, timeout=timeout)
-        response.raise_for_status()
-        data = response.json()
+        for attempt in range(3):
+            response = httpx.post(url, headers={"x-goog-api-key": key}, json=payload, timeout=timeout)
+            if response.status_code in {502, 503, 504} and attempt < 2:
+                time.sleep(0.5 * (2 ** attempt))
+                continue
+            response.raise_for_status()
+            data = response.json()
+            break
     except httpx.HTTPStatusError as exc:
         code = exc.response.status_code
         if code in {401, 403}:

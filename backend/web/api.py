@@ -1,5 +1,6 @@
 """Accounts, onboarding, profiles, and local demo jobs API."""
 import io
+from hashlib import sha256
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -20,6 +21,7 @@ from .imports import import_github, import_website, validate_public_url
 from .cases import hydrate_case, start_depth
 from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
 from .review import review_inputs, run_review
+from .requirements import EXTRACTION_VERSION, extract_requirements
 from .simplify_feed import SimplifyFeed
 from .storage import Store
 
@@ -420,6 +422,26 @@ def create_case(body: NewCase, user=Depends(current_user)):
         raise HTTPException(404, "Job is unavailable for this candidate")
     if job.get("source") == "simplify" and job.get("description_status") != "user_supplied":
         job = feed.enrich_now(job)
+    if job.get("description") and job.get("source") in {"simplify", "pasted"}:
+        job = dict(job)
+        if os.getenv("GEMINI_API_KEY"):
+            model = os.getenv("RESEARCH_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"))
+            try:
+                cache_key = sha256("\0".join((EXTRACTION_VERSION, model, job["title"], job["company"], job["description"])).encode()).hexdigest()
+                groups = store.get_requirement_extraction(cache_key)
+                if groups is None:
+                    groups = extract_requirements(job["description"], job["title"], job["company"], model)
+                    store.put_requirement_extraction(cache_key, groups)
+                job["requirement_groups"] = groups
+                job["requirements_status"] = "source_checked"
+                job["requirements_model"] = model
+                job["requirements_version"] = EXTRACTION_VERSION
+            except (RuntimeError, ValueError) as exc:
+                job["requirements_status"] = "unavailable"
+                job["requirements_note"] = f"Qualification extraction could not be verified: {exc}"
+        else:
+            job["requirements_status"] = "unavailable"
+            job["requirements_note"] = "Gemini is not configured to verify job qualifications."
     projects = []
     for project in projects_to_assess:
         try:

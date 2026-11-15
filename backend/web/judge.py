@@ -42,13 +42,86 @@ def _explicit_gap(point: dict, requirement: dict, citations: dict) -> bool:
                for key in point.get("evidence_ids", []) if key in citations)
 
 
+def _mentions(term: str, value: str) -> bool:
+    variants = {term}
+    if term.endswith("s") and len(term) > 4:
+        variants.add(term[:-1])
+    if term.endswith("ies") and len(term) > 5:
+        variants.add(term[:-3] + "y")
+    return any(re.search(r"(?<!\w)" + re.escape(option) + r"(?:s)?(?!\w)", value, re.I)
+               for option in variants)
+
+
+def _affirmative_mention(term: str, value: str) -> bool:
+    """Do not turn an explicit absence or future plan into a current skill claim."""
+    variants = {term}
+    if term.endswith("s") and len(term) > 4:
+        variants.add(term[:-1])
+    if term.endswith("ies") and len(term) > 5:
+        variants.add(term[:-3] + "y")
+    for option in variants:
+        pattern = r"(?<!\w)" + re.escape(option) + r"(?:s)?(?!\w)"
+        for match in re.finditer(pattern, value, re.I):
+            context = value[max(0, match.start() - 45):match.start()]
+            if not re.search(r"\b(?:no|without|lacks?|not proficient in|not experienced in|planned|learning|in progress)\b[^.;\n]{0,35}$", context, re.I):
+                return True
+    return False
+
+
+def _direct_coverage(requirement: dict, inputs: dict, citations: dict) -> tuple[float, str, list[str]]:
+    """Score explicit evidence, independent of which strengths a Lawyer chose to mention."""
+    alternatives = requirement.get("alternatives") or []
+    if alternatives:
+        terms, minimum = alternatives, 1
+    elif ":" in requirement["text"]:
+        terms = [part.strip(" .") for part in requirement["text"].split(":", 1)[1].split(",") if part.strip(" .")]
+        minimum = min(2, len(terms))
+    else:
+        terms, minimum = [requirement["text"]], 1
+    if not terms:
+        return 0.0, "not_shown", []
+    for project in inputs.get("depth_projects", []):
+        for skill in project.get("demonstrated_skills", []):
+            ids = [key for key in skill.get("evidence_ids", []) if key in citations and citations[key]["source"] in {"depth_repository", "depth_document"}]
+            if ids and sum(_mentions(term, skill["skill"]) for term in terms) >= minimum:
+                return 1.0, "inspected artifact", ids
+    claims = [item for item in inputs["evidence"] if item["source"] == "resume_claim"]
+    for item in claims:
+        if sum(_affirmative_mention(term, item.get("excerpt", "")) for term in terms) >= minimum:
+            return 0.5, "candidate claim", [item["id"]]
+    return 0.0, "not_shown", []
+
+
+def _source_checked_score(inputs: dict, common: dict, requirements: list[dict], citations: dict) -> dict:
+    assessed, total_weight, earned = [], 0, 0.0
+    for requirement in requirements:
+        coverage, status, ids = _direct_coverage(requirement, inputs, citations)
+        weight = 2 if requirement["kind"] == "required" else 1
+        total_weight += weight
+        earned += weight * coverage
+        assessed.append({"id": requirement["id"], "text": requirement["text"], "kind": requirement["kind"],
+                         "alternatives": requirement.get("alternatives", []), "source_quote": requirement.get("source_quote"),
+                         "status": status, "evidence_ids": ids, "coverage": coverage})
+    score = round(100 * earned / total_weight)
+    verdict = ("strong_documented_match" if score >= 80 else "promising_documented_match" if score >= 60
+               else "partial_documented_match" if score >= 40 else "limited_documented_match")
+    artifact_count = sum(item["status"] == "inspected artifact" for item in assessed)
+    return {**common, "version": "local-trial-v3", "match_score": score, "verdict": verdict,
+            "confidence": "medium" if artifact_count * 2 >= len(assessed) else "low", "requirements": assessed,
+            "note": "Documented qualification coverage from source-checked job text and cited candidate evidence. Lawyer arguments explain strengths and gaps but cannot add points by repetition. This score is not a hiring probability.",
+            "score_breakdown": {"requirement_coverage": score, "cited_support_quality": None,
+                                "weights": {"required": 2, "preferred": 1},
+                                "method": "source_checked_direct_evidence"}}
+
+
 def judge_case(inputs: dict, positive: dict, negative: dict) -> dict:
     """Weigh both arguments against explicit requirements and their citations."""
     citations = {item["id"]: item for item in inputs["evidence"]}
     pluses = [_merit(point, citations) for category in CATEGORIES for point in positive[category]]
     minuses = [_merit(point, citations) for category in CATEGORIES for point in negative[category]]
     requirements = [item for item in inputs["requirements"] if item["kind"] in {"required", "preferred"}]
-    eligibility = "unknown" if inputs["job"].get("eligibility_requirements") else "not_specified"
+    eligibility = "unknown" if inputs["job"].get("eligibility_requirements") or any(
+        item.get("kind") == "eligibility" for item in inputs["requirements"]) else "not_specified"
     common = {
         "version": "local-trial-v2", "eligibility": eligibility,
         "strengths": pluses, "objections": minuses,
@@ -57,9 +130,14 @@ def judge_case(inputs: dict, positive: dict, negative: dict) -> dict:
     if inputs["job"].get("description_status") == "listing_only":
         return {**common, "match_score": None, "verdict": "needs_job_description",
                 "confidence": "low", "requirements": [], "score_breakdown": None}
+    if inputs["job"].get("source") in {"simplify", "pasted"} and inputs["job"].get("requirements_status") != "source_checked":
+        return {**common, "match_score": None, "verdict": "needs_verified_requirements",
+                "confidence": "low", "requirements": [], "score_breakdown": None}
     if not requirements:
         return {**common, "match_score": None, "verdict": "needs_parsed_requirements",
                 "confidence": "low", "requirements": [], "score_breakdown": None}
+    if inputs["job"].get("requirements_status") == "source_checked":
+        return _source_checked_score(inputs, common, requirements, citations)
 
     assessed = []
     total_weight = 0

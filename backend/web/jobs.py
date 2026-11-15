@@ -99,7 +99,7 @@ def lightweight_screen(matched: list[str], gaps: list[str], projects: list[str],
         "verdict": "worth_exploring" if advocate else "more_info_needed",
         "confidence": "low", "stage": "profile_screen",
         "note": ("Listing-title screen only; the linked description is still being fetched or could not be read. " if title_only
-                 else "Quick screen from extracted job requirements and candidate-reported skills. " if fetched_description
+                 else "Quick screen from terms in the linked description and candidate-reported skills; qualification status is verified only in the full review. " if fetched_description
                  else "Quick screen from candidate-reported skills and project titles only. ") + "Choose Interested for the full evidence review.",
     }
 
@@ -117,7 +117,9 @@ def match_jobs(profile: dict, jobs: list[dict]):
         title_only = job.get("source") == "simplify" and job.get("description_status") == "listing_only"
         signals = [str(s) for s in job.get("title_signals", [])] if title_only else required + preferred
         matched = [s for s in signals if s.casefold() in skill_names]
-        gaps = [s for s in required if s.casefold() not in skill_names]
+        # Feed term extraction is deliberately broad. Do not present a term as
+        # a missing mandatory qualification before the full JD is parsed.
+        gaps = [] if job.get("source") == "simplify" else [s for s in required if s.casefold() not in skill_names]
         project_context = [p["title"] for p in selected_projects if any(s.casefold() in (p.get("title", "") + " " + p.get("summary", "")).casefold() for s in signals)][:2]
         source = job.get("source") or ("curated" if job["job_id"] in {j["job_id"] for j in SEED_JOBS} else "research")
         result.append({**job, "matched_skills": matched, "skill_gaps": gaps, "project_context": project_context, "source": source,

@@ -3,6 +3,8 @@ import os
 
 import httpx
 
+from .judge import _mentions
+
 
 def depth_base() -> str:
     return os.getenv("DEPTH_API_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -55,7 +57,14 @@ def hydrate_case(case: dict) -> dict:
     statuses = {item["status"] for item in assessments}
     status = "complete" if statuses == {"complete"} else "partial" if statuses & {"failed", "unavailable"} else "pending"
     demonstrated = {item["skill"].casefold() for assessment in assessments if assessment["status"] == "complete" for item in assessment["result"].get("demonstrated_skills", [])}
-    required = [str(skill) for skill in case["job"].get("required_skills", [])]
+    if case["job"].get("requirements_status") == "source_checked":
+        required_groups = [item for item in case["job"]["requirement_groups"] if item["kind"] == "required"]
+        required = [item["text"] for item in required_groups]
+        shown = {item["text"] for item in required_groups if any(
+            _mentions(term, skill) for term in (item.get("alternatives") or [item["text"]]) for skill in demonstrated)}
+    else:
+        required = [str(skill) for skill in case["job"].get("required_skills", [])]
+        shown = {skill for skill in required if skill.casefold() in demonstrated}
     questions = [{"project_id": assessment["project"]["id"], **q} for assessment in assessments if assessment["status"] == "complete" for q in assessment["result"].get("follow_up_questions", [])]
     return {
         "schema_version": 1,
@@ -67,8 +76,8 @@ def hydrate_case(case: dict) -> dict:
         "project_assessments": assessments,
         "citations": citations,
         "preparation": {
-            "required_skills_with_project_evidence": [skill for skill in required if skill.casefold() in demonstrated],
-            "required_skills_without_project_evidence": [skill for skill in required if skill.casefold() not in demonstrated],
+            "required_skills_with_project_evidence": [skill for skill in required if skill in shown],
+            "required_skills_without_project_evidence": [skill for skill in required if skill not in shown],
             "questions": questions,
         },
     }

@@ -77,6 +77,6 @@ def test_background_description_cache_changes_quick_match(tmp_path, monkeypatch)
     after = match_jobs(profile, jobs)[0]
     assert status["description_ready"] == 1
     assert after["matched_skills"] == ["Python"]
-    assert after["skill_gaps"] == ["SQL"]
-    assert "extracted job requirements" in after["screening"]["note"]
+    assert after["skill_gaps"] == []
+    assert "qualification status is verified only" in after["screening"]["note"]
     assert feed.refresh_next_descriptions() == 0

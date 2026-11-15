@@ -43,6 +43,12 @@ def test_pasted_job_to_review_with_real_peer_adapters(client, monkeypatch):
     pasted = next(item for item in matches if item["job_id"] == job_id)
     assert pasted["screening"]["stage"] == "profile_screen"
 
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-only")
+    monkeypatch.setattr(api, "extract_requirements", lambda *_: [
+        {"id": "required:1", "kind": "required", "text": "Python", "source_quote": "Python", "alternatives": ["Python"]},
+        {"id": "required:2", "kind": "required", "text": "SQL", "source_quote": "SQL", "alternatives": ["SQL"]},
+    ])
+
     monkeypatch.setattr(api, "start_depth", lambda *_: "evaluation-1")
     monkeypatch.setattr(cases, "get_depth", lambda _: {"status": "complete", "result": {
         "project_id": project["id"], "evaluation_mode": "codex", "confidence": "medium", "dimensions": {"skill_depth": {"score": 3, "evidence_ids": ["E1"]}},

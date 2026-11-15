@@ -10,6 +10,7 @@ from prototypes.harsh.lawyers import lawyers
 from .jobs import SKILL_OPTIONS
 from .judge import judge_case
 from .gemini_lawyer import review_with_gemini
+from .evidence_selection import select_lawyer_evidence
 
 
 def synthetic_comparisons(signals: set[str]) -> list[dict]:
@@ -58,12 +59,14 @@ def review_inputs(bundle: dict) -> dict:
         comparisons = synthetic_comparisons({item["signal"] for item in paralegal["evidence"]})
     else:
         track = {"hardware": "HW", "product": "PM"}.get(job.get("track"))
-        lines = candidate.get("resume_text", "").splitlines()
+        resume_text = candidate.get("resume_text", "")
         signals = []
         for skill in SKILL_OPTIONS.get(track, []):
-            found = next((line.strip() for line in lines if re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", line, re.I)), None)
+            found = re.search(r"(?<!\w)" + re.escape(skill) + r"(?!\w)", resume_text, re.I)
             if found:
-                signals.append({"signal": skill, "terms": [skill], "field": "resume", "quote": found})
+                start, end = max(0, found.start() - 90), min(len(resume_text), found.end() + 90)
+                quote = ("…" if start else "") + resume_text[start:end].strip() + ("…" if end < len(resume_text) else "")
+                signals.append({"signal": skill, "terms": [skill], "field": "resume", "quote": quote})
         paralegal = {"id": candidate["candidate_id"], "source": "local_track_terms", "evidence": signals}
     if paralegal:
         for index, item in enumerate(paralegal["evidence"], 1):
@@ -72,10 +75,13 @@ def review_inputs(bundle: dict) -> dict:
                 "location": item["field"], "excerpt": item["quote"],
                 "signal": item["signal"], "terms": item["terms"],
             })
+    requirements = (job.get("requirement_groups", []) if job.get("source") in {"simplify", "pasted"}
+                    else lawyers.job_requirements(job))
+    evidence = select_lawyer_evidence(bundle, requirements, evidence, depth_projects)
     return {
         "case_id": bundle["case_id"], "candidate_id": candidate["candidate_id"],
         "job_id": job["job_id"], "job": job,
-        "requirements": lawyers.job_requirements(job),
+        "requirements": requirements,
         "evidence": evidence, "depth_projects": depth_projects,
         "paralegal": paralegal, "synthetic_comparisons": comparisons,
         "actual_depth_modes": depth_modes,
@@ -88,20 +94,38 @@ def run_review(inputs: dict) -> dict:
         raise ValueError("LAWYER_PROVIDER must be ollama or gemini")
     model = os.getenv("LAWYER_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")) if provider == "gemini" else os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
+    if inputs["job"].get("source") in {"simplify", "pasted"} and inputs["job"].get("requirements_status") != "source_checked":
+        empty = {category: [] for category in lawyers.CATEGORIES}
+        return {"provider": provider, "model": model, "lawyer_execution": "skipped_unverified_requirements",
+                "lawyers": {"positive": empty, "negative": empty},
+                "categories": {category: {"pluses": [], "minuses": []} for category in lawyers.CATEGORIES},
+                "judge": judge_case(inputs, empty, empty)}
     review_lawyer = (lambda role, previous=None: review_with_gemini(role, requirements, evidence, depth_projects, previous)) if provider == "gemini" else (lambda role, previous=None: lawyers.review_with_ollama(model, role, requirements, evidence, depth_projects, previous))
     # Both model calls receive the same frozen case and neither sees the
     # other's argument. Reconcile contradictions only after both finish.
     with ThreadPoolExecutor(max_workers=2, thread_name_prefix="lawyer") as pool:
         positive_future = pool.submit(review_lawyer, "positive")
         negative_future = pool.submit(review_lawyer, "negative")
-        positive = positive_future.result()
-        independent_negative = negative_future.result()
+        empty = {category: [] for category in lawyers.CATEGORIES}
+        errors = {}
+        try:
+            positive = positive_future.result()
+        except Exception as error:
+            positive = empty
+            errors["positive"] = str(error)
+        try:
+            independent_negative = negative_future.result()
+        except Exception as error:
+            independent_negative = empty
+            errors["negative"] = str(error)
     negative = lawyers.clean_negative(
         independent_negative,
         positive, requirements,
     )
     return {
-        "provider": provider, "model": model, "lawyer_execution": "independent_parallel",
+        "provider": provider, "model": model,
+        "lawyer_execution": "independent_parallel" if not errors else "partial_model_failure" if len(errors) == 1 else "model_unavailable",
+        "lawyer_errors": errors,
         "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
         "judge": judge_case(inputs, positive, negative),
