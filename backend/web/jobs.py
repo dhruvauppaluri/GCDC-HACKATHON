@@ -87,7 +87,8 @@ def load_jobs(path: Path | None):
     return list({j["job_id"]: j for j in jobs}.values())
 
 
-def lightweight_screen(matched: list[str], gaps: list[str], projects: list[str], *, title_only: bool = False) -> dict:
+def lightweight_screen(matched: list[str], gaps: list[str], projects: list[str], *, title_only: bool = False,
+                       fetched_description: bool = False) -> dict:
     """Fast claim-only advocate/skeptic pass for the discovery list."""
     advocate = [f"Your profile lists {', '.join(matched[:3])}; the listing title mentions these terms, but its full requirements are not available yet." if title_only else f"Your profile lists {', '.join(matched[:3])}."] if matched else []
     if projects:
@@ -97,7 +98,9 @@ def lightweight_screen(matched: list[str], gaps: list[str], projects: list[str],
         "advocate": advocate, "skeptic": skeptic,
         "verdict": "worth_exploring" if advocate else "more_info_needed",
         "confidence": "low", "stage": "profile_screen",
-        "note": ("Listing-title screen only; requirements need the original posting. " if title_only else "Quick screen from candidate-reported skills and project titles only. ") + "Choose Interested for the full evidence review.",
+        "note": ("Listing-title screen only; the linked description is still being fetched or could not be read. " if title_only
+                 else "Quick screen from extracted job requirements and candidate-reported skills. " if fetched_description
+                 else "Quick screen from candidate-reported skills and project titles only. ") + "Choose Interested for the full evidence review.",
     }
 
 
@@ -118,5 +121,6 @@ def match_jobs(profile: dict, jobs: list[dict]):
         project_context = [p["title"] for p in selected_projects if any(s.casefold() in (p.get("title", "") + " " + p.get("summary", "")).casefold() for s in signals)][:2]
         source = job.get("source") or ("curated" if job["job_id"] in {j["job_id"] for j in SEED_JOBS} else "research")
         result.append({**job, "matched_skills": matched, "skill_gaps": gaps, "project_context": project_context, "source": source,
-                       "screening": lightweight_screen(matched, gaps, project_context, title_only=title_only)})
+                       "screening": lightweight_screen(matched, gaps, project_context, title_only=title_only,
+                                                       fetched_description=job.get("source") == "simplify" and not title_only)})
     return sorted(result, key=lambda j: (j["source"] != "pasted", -len(j["matched_skills"]), -len(j["project_context"]), len(j["skill_gaps"]), -int(j.get("date_posted") or 0), j["title"]))

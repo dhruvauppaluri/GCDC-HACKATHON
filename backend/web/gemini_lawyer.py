@@ -26,7 +26,7 @@ The skeptic should mark missing information as unknown, not a proven gap.
 Do not treat missing internships or unrequested tools as weaknesses.
 Do not infer poor ability from missing evidence. Do not invent strengths.
 Depth ratings show project evidence, not authorship or job fit.
-The positive Lawyer's findings are supplied to the skeptic to avoid contradictory arguments."""
+Form your argument independently from the shared case evidence."""
     result = generate_json(system, {"requirements": requirements, "evidence": evidence,
                                     "depth_projects": depth_projects, "positive_review": positive_review},
                            schema, model_env="LAWYER_GEMINI_MODEL")

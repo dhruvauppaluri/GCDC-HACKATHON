@@ -3,6 +3,7 @@ import os
 import json
 from pathlib import Path
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 from data.fixtures.rishi.swe_paralegal import extract
 from prototypes.harsh.lawyers import lawyers
@@ -88,13 +89,20 @@ def run_review(inputs: dict) -> dict:
     model = os.getenv("LAWYER_GEMINI_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")) if provider == "gemini" else os.getenv("LAWYER_OLLAMA_MODEL", "qwen3:4b")
     requirements, evidence, depth_projects = (inputs[key] for key in ("requirements", "evidence", "depth_projects"))
     review_lawyer = (lambda role, previous=None: review_with_gemini(role, requirements, evidence, depth_projects, previous)) if provider == "gemini" else (lambda role, previous=None: lawyers.review_with_ollama(model, role, requirements, evidence, depth_projects, previous))
-    positive = review_lawyer("positive")
+    # Both model calls receive the same frozen case and neither sees the
+    # other's argument. Reconcile contradictions only after both finish.
+    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="lawyer") as pool:
+        positive_future = pool.submit(review_lawyer, "positive")
+        negative_future = pool.submit(review_lawyer, "negative")
+        positive = positive_future.result()
+        independent_negative = negative_future.result()
     negative = lawyers.clean_negative(
-        review_lawyer("negative", positive),
+        independent_negative,
         positive, requirements,
     )
     return {
-        "provider": provider, "model": model, "lawyers": {"positive": positive, "negative": negative},
+        "provider": provider, "model": model, "lawyer_execution": "independent_parallel",
+        "lawyers": {"positive": positive, "negative": negative},
         "categories": {category: {"pluses": positive[category], "minuses": negative[category]} for category in lawyers.CATEGORIES},
         "judge": judge_case(inputs, positive, negative),
     }

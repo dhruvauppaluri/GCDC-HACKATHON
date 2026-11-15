@@ -1,5 +1,6 @@
 """Accounts, onboarding, profiles, and local demo jobs API."""
 import io
+import logging
 import os
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
@@ -19,13 +20,14 @@ from .imports import import_github, import_website, validate_public_url
 from .cases import hydrate_case, start_depth
 from .jobs import SKILL_OPTIONS, TRACKS, load_jobs, match_jobs, parse_job_description, suggest_tracks
 from .review import review_inputs, run_review
-from .simplify_feed import SimplifyFeed, enrich_listing
+from .simplify_feed import SimplifyFeed
 from .storage import Store
 
 DATA_DIR = Path(os.getenv("WEB_DATA_DIR", ".web-data"))
 store = Store(DATA_DIR / "app.sqlite3")
 review_pool = ThreadPoolExecutor(max_workers=2)
 feed = SimplifyFeed(DATA_DIR / "simplify-cache.json")
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -33,13 +35,26 @@ async def lifespan(app: FastAPI):
     stop = Event()
     def refresh_loop():
         while not stop.is_set():
-            feed.get()
+            try:
+                feed.get()
+            except Exception:
+                logger.exception("Simplify feed refresh failed")
             stop.wait(300)
     thread = Thread(target=refresh_loop, name="simplify-feed-refresh", daemon=True)
     thread.start()
+    def description_loop():
+        while not stop.is_set():
+            try:
+                feed.refresh_next_descriptions(limit=4)
+            except Exception:
+                logger.exception("Linked job description refresh failed")
+            stop.wait(2)
+    description_thread = Thread(target=description_loop, name="simplify-description-refresh", daemon=True)
+    description_thread.start()
     yield
     stop.set()
     thread.join(timeout=1)
+    description_thread.join(timeout=1)
 
 
 app = FastAPI(title="SC-HACK Candidate Experience", lifespan=lifespan)
@@ -366,7 +381,7 @@ def create_case(body: NewCase, user=Depends(current_user)):
     if not job or (job["track"] not in candidate_export(user)["target_tracks"] and job.get("source") != "pasted"):
         raise HTTPException(404, "Job is unavailable for this candidate")
     if job.get("source") == "simplify":
-        job = enrich_listing(job)
+        job = feed.enrich_now(job)
     projects = []
     for project in selected:
         try:

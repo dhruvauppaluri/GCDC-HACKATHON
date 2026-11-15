@@ -1,5 +1,6 @@
 """Read-only, four-hour cache of SimplifyJobs' public internship listings."""
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
@@ -10,8 +11,7 @@ import time
 import httpx
 
 from .jobs import SKILL_OPTIONS
-from .imports import TextExtractor, validate_public_url
-from .jobs import parse_job_description
+from .job_descriptions import DESCRIPTION_TTL, JobDescriptionStore, enrich_listing
 
 
 SOURCE_REPO = "https://github.com/SimplifyJobs/Summer2027-Internships"
@@ -55,6 +55,7 @@ class SimplifyFeed:
     def __init__(self, path: Path):
         self.path = path
         self.lock = Lock()
+        self.descriptions = JobDescriptionStore(path.with_name("simplify-descriptions.sqlite3"))
         self.cache = {"checked_at": 0, "etag": None, "jobs": [], "error": None}
         if path.exists():
             try:
@@ -68,11 +69,60 @@ class SimplifyFeed:
         with self.lock:
             if time.time() - self.cache["checked_at"] >= REFRESH_SECONDS:
                 self._refresh()
-            return list(self.cache["jobs"]), {
-                "source": SOURCE_REPO, "enabled": True, "checked_at": self.cache["checked_at"],
-                "count": len(self.cache["jobs"]), "error": self.cache["error"],
-                "refresh_interval_hours": 4,
-            }
+            jobs = list(self.cache["jobs"])
+            checked_at, error = self.cache["checked_at"], self.cache["error"]
+        descriptions = self.descriptions.all()
+        enriched = []
+        ready = failed = 0
+        for job in jobs:
+            cached = descriptions.get(job["source_url"])
+            if cached and cached.get("description_fetch_status") == "fetched":
+                ready += 1
+                enriched.append({**job, **{key: value for key, value in cached.items() if key != "checked_at"}})
+            elif cached:
+                failed += 1
+                enriched.append({**job, "description_fetch_status": "failed", "research_note": cached.get("research_note")})
+            else:
+                enriched.append({**job, "description_fetch_status": "pending"})
+        return enriched, {
+            "source": SOURCE_REPO, "enabled": True, "checked_at": checked_at,
+            "count": len(jobs), "error": error, "refresh_interval_hours": 4,
+            "description_ready": ready, "description_failed": failed,
+            "description_pending": len(jobs) - ready - failed,
+        }
+
+    def refresh_next_descriptions(self, limit: int = 4) -> int:
+        """Gradually fill the four-hour JD cache; never block a match request."""
+        if os.getenv("SIMPLIFY_FEED_ENABLED", "1") == "0":
+            return 0
+        with self.lock:
+            jobs = list(self.cache["jobs"])
+        cached = self.descriptions.all()
+        now = time.time()
+        due = [job for job in jobs if now - cached.get(job["source_url"], {}).get("checked_at", 0) >= DESCRIPTION_TTL]
+        due.sort(key=lambda job: (job["source_url"] in cached, -int(job.get("date_posted") or 0),
+                                  cached.get(job["source_url"], {}).get("checked_at", 0)))
+        selected = []
+        seen_urls = set()
+        for job in due:
+            if job["source_url"] not in seen_urls:
+                selected.append(job)
+                seen_urls.add(job["source_url"])
+            if len(selected) >= limit:
+                break
+        if not selected:
+            return 0
+        with ThreadPoolExecutor(max_workers=min(len(selected), 4), thread_name_prefix="job-description") as pool:
+            for job, result in zip(selected, pool.map(enrich_listing, selected)):
+                self.descriptions.put(job["source_url"], result)
+        return len(selected)
+
+    def enrich_now(self, job: dict) -> dict:
+        if job.get("description_status") == "fetched":
+            return job
+        result = enrich_listing(job)
+        self.descriptions.put(job["source_url"], result)
+        return result
 
     def _refresh(self):
         headers = {"User-Agent": "SC-HACK-local-trial", "Accept": "application/json"}
@@ -99,33 +149,3 @@ class SimplifyFeed:
         except (httpx.HTTPError, ValueError, OSError) as exc:
             self.cache["error"] = str(exc)
             self.cache["checked_at"] = time.time() - REFRESH_SECONDS + 300
-
-
-def enrich_listing(job: dict) -> dict:
-    """Fetch the original posting on interest; preserve a listing-only fallback."""
-    enriched = dict(job)
-    try:
-        validate_public_url(job["source_url"])
-        with httpx.Client(timeout=12, follow_redirects=False) as client:
-            with client.stream("GET", job["source_url"], headers={"User-Agent": "SC-HACK-local-trial"}) as response:
-                response.raise_for_status()
-                if "text/html" not in response.headers.get("content-type", ""):
-                    raise ValueError("Original posting did not return HTML")
-                chunks, length = [], 0
-                for chunk in response.iter_bytes():
-                    length += len(chunk)
-                    if length > 200_000:
-                        break
-                    chunks.append(chunk)
-        parser = TextExtractor()
-        parser.feed(b"".join(chunks).decode("utf-8", errors="replace"))
-        text = "\n".join(parser.parts)[:20_000]
-        if len(text) < 100:
-            raise ValueError("Original posting has too little readable text")
-        parsed = parse_job_description(text, job["track"], job["title"], job["company"])
-        enriched.update(description=text, description_status="fetched", required_skills=parsed["required_skills"],
-                        preferred_skills=parsed["preferred_skills"], research_note="Requirements were extracted from the linked posting; review them against the original.")
-    except (ValueError, httpx.HTTPError, KeyError) as exc:
-        enriched.update(description=f"Listing for {job['title']} at {job['company']}. Full job description unavailable.",
-                        description_status="listing_only", research_note=f"Could not read the original posting: {exc}. Paste the full JD for a stronger review.")
-    return enriched

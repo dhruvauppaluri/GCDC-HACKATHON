@@ -99,4 +99,20 @@ def test_gemini_lawyer_provider_uses_same_validated_case(monkeypatch):
     assert result["provider"] == "gemini"
     assert result["judge"]["match_score"] == 52
     assert len(calls) == 2
-    assert calls[1][1]["positive_review"] == result["lawyers"]["positive"]
+    assert all(call[1]["positive_review"] is None for call in calls)
+    assert result["lawyer_execution"] == "independent_parallel"
+
+
+def test_lawyers_start_independently_before_either_finishes(monkeypatch):
+    from threading import Barrier
+
+    started = Barrier(2, timeout=3)
+    def fake_lawyer(model, role, requirements, evidence, depth_projects, positive_review=None):
+        assert positive_review is None
+        started.wait()
+        return empty()
+
+    monkeypatch.setenv("LAWYER_PROVIDER", "ollama")
+    monkeypatch.setattr(review.lawyers, "review_with_ollama", fake_lawyer)
+    result = review.run_review({**case(), "depth_projects": []})
+    assert result["lawyer_execution"] == "independent_parallel"
