@@ -1,4 +1,6 @@
 from fastapi.testclient import TestClient
+from docx import Document
+import io
 import json
 import pytest
 
@@ -20,6 +22,67 @@ def signup(client):
     response = client.post("/api/auth/signup", json={"email": "New@Example.com", "password": "DemoPass123!"})
     assert response.status_code == 200
     assert response.json()["email"] == "new@example.com"
+
+
+def test_hanzel_resume_jobs_and_saved_checks(client, monkeypatch):
+    signup(client)
+    document = Document()
+    document.add_paragraph("Built a Python API for a capstone project")
+    content = io.BytesIO()
+    document.save(content)
+    uploaded = client.post("/api/onboarding/resume", files={"file": ("resume.docx", content.getvalue())})
+    assert uploaded.status_code == 200
+    assert "Python API" in uploaded.json()["preview"]
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    api.store.update_profile(user_id, {"target_tracks": ["CS"], "skills": {"CS": {"Python": 3}}, "completed": True,
+                                       "projects": [{"id": "resume:one", "source": "resume", "title": "API project",
+                                                     "summary": "Built a Python API", "url": "", "selected": True}]})
+    listing = normalize([{"id": "saved", "active": True, "is_visible": True, "category": "Software",
+                         "title": "Software Engineering Intern", "company_name": "Example",
+                         "url": "https://example.com/role", "terms": ["Summer 2027"]}], "2026-11-15T00:00:00Z")[0]
+    monkeypatch.setattr(api.feed, "get", lambda: ([listing], {"count": 1}))
+    monkeypatch.setattr(api, "start_depth", lambda *_: None)
+    assert client.get("/api/jobs/matches", params={"q": "Example"}).json()["total_available"] == 1
+    assert client.get("/api/jobs/matches", params={"q": "no such company"}).json()["total_available"] == 0
+    job_id = listing["job_id"]
+    assert client.put(f"/api/saved-jobs/{job_id}").status_code == 200
+    assert client.get("/api/saved-jobs").json()["jobs"][0]["title"] == listing["title"]
+    case_id = client.post("/api/cases", json={"job_id": job_id}).json()["case_id"]
+    assert client.get("/api/cases").json()["cases"][0]["case_id"] == case_id
+    assert client.post("/api/auth/signup", json={"email": "second@example.com", "password": "DemoPass123!"}).status_code == 200
+    assert client.get("/api/cases").json()["cases"] == []
+    assert client.get("/api/saved-jobs").json()["jobs"] == []
+    assert client.get(f"/api/cases/{case_id}").status_code == 404
+    assert client.post("/api/auth/login", json={"email": "new@example.com", "password": "DemoPass123!"}).status_code == 200
+    assert client.delete(f"/api/saved-jobs/{job_id}").status_code == 204
+    assert client.get("/api/saved-jobs").json()["jobs"] == []
+
+
+def test_failed_case_retry_resets_stale_review_for_its_owner(client, monkeypatch):
+    signup(client)
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    case_id = "case-with-failed-depth"
+    api.store.put_case(case_id, user_id, {"case_id": case_id, "candidate": {}, "job": {},
+                                          "projects": [{"project": {"title": "NeuroSig"}, "evaluation_id": "failed-depth"}]})
+    api.store.put_review(case_id, user_id)
+    api.store.finish_review(case_id, {"judge": {"match_score": None}})
+    monkeypatch.setattr(api, "get_depth", lambda evaluation_id: {"status": "failed"})
+    class Response:
+        def raise_for_status(self): pass
+    class Client:
+        def __init__(self, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def post(self, url):
+            assert url.endswith("/depth/evaluations/failed-depth/retry")
+            return Response()
+    monkeypatch.setattr(api.httpx, "Client", Client)
+    response = client.post(f"/api/cases/{case_id}/retry-depth")
+    assert response.status_code == 202
+    assert response.json()["queued"] == 1
+    assert api.store.get_review(case_id, user_id) is None
+    assert client.post("/api/auth/signup", json={"email": "second@example.com", "password": "DemoPass123!"}).status_code == 200
+    assert client.post(f"/api/cases/{case_id}/retry-depth").status_code == 404
 
 
 def simplify_job(job_id, track, title, required_skills):
@@ -137,7 +200,7 @@ def test_signup_login_resume_and_return(client):
     assert client.patch("/api/onboarding/name", json={"first_name": "Ada", "last_name": "Lovelace"}).status_code == 200
     assert client.post("/api/onboarding/resume", files={"file": ("resume.docx", b"x")}).status_code == 422
     assert client.post("/api/onboarding/resume", files={"file": ("resume.txt", b" ")}).status_code == 422
-    assert client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"x" * 2_000_001)}).status_code == 413
+    assert client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"x" * 10_000_001)}).status_code == 413
     assert client.post("/api/onboarding/resume", files={"file": ("resume.txt", b"Built FPGA boards and software tools")}).status_code == 200
     assert client.get("/api/me").json()["profile"]["resume_name"] == "resume.txt"
     assert client.post("/api/auth/logout").status_code == 204

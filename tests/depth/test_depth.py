@@ -1,6 +1,7 @@
 from io import BytesIO
 import base64
 import time
+from zipfile import ZipFile
 
 from docx import Document
 from fastapi.testclient import TestClient
@@ -8,11 +9,13 @@ from pypdf import PdfWriter
 import pytest
 
 from backend.depth import evaluation
+from backend.depth import api as depth_api
 from backend.depth import codex_adapter
 from backend.depth.api import app
 from backend.depth.fixtures import SCENARIOS
 from backend.depth import ingestion
 from backend.depth.ingestion import extract_upload, make_evidence, parse_github_url
+from backend.depth.storage import JobStore
 from backend.depth.rubrics import ANSWER_CRITERIA, ARTIFACT_CRITERIA, RUBRICS
 
 
@@ -129,6 +132,7 @@ def test_public_website_extraction_is_bounded_and_rejects_private_dns(monkeypatc
 
 
 def test_repository_ingestion_pins_commit_and_reads_source(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
     class Response:
         def __init__(self, body):
             self.body = body
@@ -158,6 +162,103 @@ def test_repository_ingestion_pins_commit_and_reads_source(monkeypatch):
     assert sha == "abc123"
     assert sources == [{"source_type": "repository", "location": "tests/test_app.py@abc123", "text": "assert works()\n"}]
     assert not limitations
+
+
+def test_public_repository_archive_avoids_rest_quota(monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    sha = "a" * 40
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        archive.writestr(f"repo-{sha}/tests/test_app.py", "assert works()\n")
+        archive.writestr(f"repo-{sha}/binary.png", "ignored")
+    class Result:
+        stdout = f"ref: refs/heads/main\tHEAD\n{sha}\tHEAD\n"
+    def fake_run(command, **kwargs):
+        assert command[-2:] == ["https://github.com/example/repo.git", "HEAD"]
+        assert kwargs["env"]["GIT_TERMINAL_PROMPT"] == "0"
+        return Result()
+    class Response:
+        status_code = 200
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def raise_for_status(self): pass
+        def iter_bytes(self): yield buffer.getvalue()
+    class Client:
+        def __init__(self, **kwargs):
+            assert kwargs["follow_redirects"] is False
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def stream(self, method, url, **kwargs):
+            assert method == "GET"
+            assert url == f"https://codeload.github.com/example/repo/zip/{sha}"
+            return Response()
+    monkeypatch.setattr(ingestion.subprocess, "run", fake_run)
+    monkeypatch.setattr(ingestion.httpx, "Client", Client)
+    commit, sources, limitations = ingestion.public_repository_evidence("https://github.com/example/repo")
+    assert commit == sha
+    assert sources == [{"source_type": "repository", "location": f"tests/test_app.py@{sha}", "text": "assert works()\n"}]
+    assert limitations == []
+
+
+def test_failed_depth_job_can_be_requeued_without_running_model(tmp_path, monkeypatch):
+    store = JobStore(tmp_path / "jobs.sqlite3")
+    store.put("retry-one", {"project_id": "p", "career_track": "hardware", "mode": "gemini"})
+    store.set("retry-one", "failed", error="GitHub API rate limit reached")
+    queued = []
+    monkeypatch.setattr(depth_api, "store", store)
+    monkeypatch.setattr(depth_api.executor, "submit", lambda fn, job_id: queued.append(job_id))
+    client = TestClient(depth_api.app)
+    assert client.post("/depth/evaluations/retry-one/retry").status_code == 202
+    assert store.get("retry-one")["status"] == "queued"
+    assert store.get("retry-one")["error"] is None
+    assert queued == ["retry-one"]
+    assert client.post("/depth/evaluations/retry-one/retry").status_code == 409
+
+
+def test_exhausted_authenticated_rest_quota_uses_public_archive(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    fallback = ("a" * 40, [{"source_type": "repository", "location": "README.md", "text": "proof"}], [])
+    monkeypatch.setattr(ingestion, "_public_repository_archive", lambda owner, repo, sha=None: fallback)
+    class Response:
+        status_code = 403
+        headers = {"x-ratelimit-remaining": "0"}
+    class Client:
+        def __init__(self, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def get(self, *args, **kwargs): return Response()
+    monkeypatch.setattr(ingestion.httpx, "Client", Client)
+    assert ingestion.public_repository_evidence("https://github.com/example/repo") == fallback
+
+
+def test_large_public_repository_uses_bounded_blobless_clone(monkeypatch):
+    sha = "b" * 40
+    blob = "c" * 40
+    calls = []
+    class Result:
+        def __init__(self, stdout=b""):
+            self.stdout = stdout
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        if "clone" in command:
+            assert "--filter=blob:none" in command and "--no-checkout" in command
+            return Result()
+        if "rev-parse" in command:
+            return Result(sha + "\n")
+        if "ls-tree" in command:
+            return Result(f"100644 blob {blob}\tREADME.md\0".encode())
+        if "-s" in command:
+            return Result("18\n")
+        if "cat-file" in command:
+            return Result(b"Architecture notes\n")
+        raise AssertionError(command)
+    monkeypatch.setattr(ingestion.subprocess, "run", fake_run)
+    commit, sources, limits = ingestion._public_repository_git("example", "large-repo")
+    assert commit == sha
+    assert sources == [{"source_type": "repository", "location": f"README.md@{sha}", "text": "Architecture notes\n"}]
+    assert limits == []
+    assert all("checkout" not in command for command in calls if command[1:2] != ["-c"])
 
 
 def test_live_adapter_uses_configured_model(monkeypatch):

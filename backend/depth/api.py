@@ -143,6 +143,16 @@ def get_evaluation(evaluation_id: str):
     return {k: job[k] for k in ("evaluation_id", "status", "result", "error", "updated_at")}
 
 
+@app.post("/depth/evaluations/{evaluation_id}/retry", status_code=202)
+def retry_evaluation(evaluation_id: str):
+    if not store.get(evaluation_id):
+        raise HTTPException(404, "Evaluation not found")
+    if not store.retry_failed(evaluation_id):
+        raise HTTPException(409, "Only failed evaluations can be retried")
+    executor.submit(process_job, evaluation_id)
+    return {"evaluation_id": evaluation_id, "status": "queued"}
+
+
 @app.post("/depth/evaluations/{evaluation_id}/answers", status_code=202)
 def submit_answers(evaluation_id: str, body: Answers):
     job = store.get(evaluation_id)
