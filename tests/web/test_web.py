@@ -58,6 +58,33 @@ def test_hanzel_resume_jobs_and_saved_checks(client, monkeypatch):
     assert client.get("/api/saved-jobs").json()["jobs"] == []
 
 
+def test_failed_case_retry_resets_stale_review_for_its_owner(client, monkeypatch):
+    signup(client)
+    user_id = api.store.authenticate("new@example.com", "DemoPass123!")
+    case_id = "case-with-failed-depth"
+    api.store.put_case(case_id, user_id, {"case_id": case_id, "candidate": {}, "job": {},
+                                          "projects": [{"project": {"title": "NeuroSig"}, "evaluation_id": "failed-depth"}]})
+    api.store.put_review(case_id, user_id)
+    api.store.finish_review(case_id, {"judge": {"match_score": None}})
+    monkeypatch.setattr(api, "get_depth", lambda evaluation_id: {"status": "failed"})
+    class Response:
+        def raise_for_status(self): pass
+    class Client:
+        def __init__(self, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def post(self, url):
+            assert url.endswith("/depth/evaluations/failed-depth/retry")
+            return Response()
+    monkeypatch.setattr(api.httpx, "Client", Client)
+    response = client.post(f"/api/cases/{case_id}/retry-depth")
+    assert response.status_code == 202
+    assert response.json()["queued"] == 1
+    assert api.store.get_review(case_id, user_id) is None
+    assert client.post("/api/auth/signup", json={"email": "second@example.com", "password": "DemoPass123!"}).status_code == 200
+    assert client.post(f"/api/cases/{case_id}/retry-depth").status_code == 404
+
+
 def simplify_job(job_id, track, title, required_skills):
     return {"job_id": job_id, "source": "simplify", "track": track, "title": title,
             "company": "Example", "source_url": "https://example.com/job",

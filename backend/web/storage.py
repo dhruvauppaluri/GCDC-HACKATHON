@@ -165,6 +165,10 @@ class Store:
         with self.lock, self.connect() as db:
             db.execute("INSERT OR IGNORE INTO reviews VALUES (?,?,?,?,?,?)", (case_id, user_id, "pending", None, None, utcnow().isoformat()))
 
+    def reset_review(self, case_id: str, user_id: str):
+        with self.lock, self.connect() as db:
+            db.execute("DELETE FROM reviews WHERE case_id=? AND user_id=?", (case_id, user_id))
+
     def finish_review(self, case_id: str, result: dict | None = None, error: str | None = None):
         with self.lock, self.connect() as db:
             db.execute("UPDATE reviews SET status=?, payload=?, error=? WHERE case_id=?", ("failed" if error else "complete", json.dumps(result) if result else None, error, case_id))

@@ -4,8 +4,8 @@
 - Assigned component: Project Depth Intelligence, website, and integration maintainer (confirmed by Dhruva)
 - Owned directories: `backend/depth/`, `tests/depth/`, `backend/web/`, `tests/web/`, `web/`, this file
 - Prohibited directories: other components and restricted shared paths without integration review
-- Current task: Integrate the Hanzel Figma layout with the authenticated candidate experience and its full review pipeline.
-- Status: Hanzel home, Simplify job cards, saved checks, and reports are connected to the existing APIs. Added search, bookmarks, report history, and DOCX uploads. Both new Gemini keys authenticated and completed small structured requests from an ignored local environment file. The full test suite (81 tests), frontend build, and local browser checks passed. No key was written to tracked files.
+- Current task: Fix GitHub API rate limit failures in Depth without consuming demo Gemini quota.
+- Status: Public GitHub ingestion now uses a pinned archive and a blobless Git clone for large repositories, avoiding anonymous REST request exhaustion. Added manual retry for failed Depth checks and reset stale fit reviews before recomputing them. All three Dhruva repositories yielded source evidence without a GitHub token. Full suite: 86 tests passed; frontend build passed. No Gemini evaluation was started during this fix.
 - Completed work: Depth foundation, evidence ingestion, mock/API/Codex modes, answer revisions, API, tests; onboarding website and 13 synthetic user/resume JSON fixtures; Venya's pending role added on main
 - Work in progress: Windows-ready Ollama and opt-in Gemini provider; background JD coverage depends on employer pages being accessible while the web process runs
 - Next steps: calibrate requirement extraction and score bands against human-reviewed HW/CS/PM cases; hand the integration Judge to Rishi and Harsh for review; review the Hanzel branch with the team

@@ -19,7 +19,7 @@ from docx import Document
 import httpx
 
 from .imports import import_github, import_website, validate_public_url
-from .cases import hydrate_case, start_depth
+from .cases import depth_base, get_depth, hydrate_case, start_depth
 from .jobs import SKILL_OPTIONS, TRACKS, match_jobs, parse_job_description, suggest_tracks
 from .review import review_inputs, run_review
 from .gemini_client import gemini_keys_available
@@ -488,6 +488,31 @@ def get_case(case_id: str, user=Depends(current_user)):
     if not case:
         raise HTTPException(404, "Case not found")
     return hydrate_case(case)
+
+
+@app.post("/api/cases/{case_id}/retry-depth", status_code=202)
+def retry_case_depth(case_id: str, user=Depends(current_user)):
+    case = store.get_case(case_id, user["id"])
+    if not case:
+        raise HTTPException(404, "Case not found")
+    queued, errors = [], []
+    for item in case["projects"]:
+        evaluation_id = item.get("evaluation_id")
+        if not evaluation_id:
+            continue
+        try:
+            if get_depth(evaluation_id)["status"] != "failed":
+                continue
+            with httpx.Client(timeout=15) as client:
+                response = client.post(f"{depth_base()}/depth/evaluations/{evaluation_id}/retry")
+            response.raise_for_status()
+            queued.append(evaluation_id)
+        except (httpx.HTTPError, KeyError, ValueError):
+            errors.append(item["project"]["title"])
+    if not queued:
+        raise HTTPException(502 if errors else 409, "Failed project evaluations could not be retried" if errors else "No failed project evaluations to retry")
+    store.reset_review(case_id, user["id"])
+    return {"case_id": case_id, "queued": len(queued), "retry_errors": errors}
 
 
 @app.get("/api/cases/{case_id}/review-preview")

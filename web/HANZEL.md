@@ -43,3 +43,5 @@ The app stores accounts, résumé text, reports, and bookmarks in `.web-data/`; 
 5. Saved checks lists recent case reports and bookmarked roles per account. Scores are shown only when a Judge score actually exists.
 
 The full review can take time and incurs model requests. If a linked JD is unavailable, the case uses title evidence only until the candidate supplies the full description on the role card. The UI does not invent a score for a quick screen.
+
+Public GitHub project inspection no longer depends on the anonymous REST API allowance. Depth reads a commit-pinned public archive, and switches to a blobless Git clone for archives over 20 MB. It inspects only bounded source files and never checks out or runs repository code. `GITHUB_TOKEN` remains optional for authenticated REST access; exhausted REST quota falls back to public ingestion. If a saved case already shows a failed project check, use **Retry failed checks and fit review** on that case after restarting the updated services. That action reruns project evaluation and the full review, so it can use Gemini credits; merely opening the case or this retry control does not.

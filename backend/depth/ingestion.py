@@ -6,6 +6,9 @@ from io import BytesIO
 import os
 import re
 import socket
+import stat
+import subprocess
+import tempfile
 from zipfile import ZipFile
 from urllib.parse import quote, urlparse
 
@@ -17,11 +20,13 @@ MAX_UPLOAD = 2_000_000
 MAX_REPO_FILES = 30
 MAX_SOURCE_CHARS = 180_000
 MAX_EVIDENCE_CHARS = 60_000
+MAX_ARCHIVE_BYTES = 20_000_000
+MAX_ARCHIVE_ENTRIES = 10_000
 ALLOWED_SUFFIXES = (".py", ".js", ".ts", ".tsx", ".swift", ".sv", ".v", ".c", ".cpp", ".h", ".rs", ".go", ".md", ".txt", ".json", ".yaml", ".yml", ".toml", ".sh", ".sql", ".csv")
 
 
 def _rate_limited(response) -> bool:
-    return getattr(response, "status_code", None) == 403 and getattr(response, "headers", {}).get("x-ratelimit-remaining") == "0"
+    return getattr(response, "status_code", None) in {403, 429} and getattr(response, "headers", {}).get("x-ratelimit-remaining") == "0"
 
 
 def validate_public_website_url(url: str) -> None:
@@ -113,6 +118,8 @@ def extract_upload(filename: str, data: bytes) -> str:
 
 def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
     owner, repo = parse_github_url(url)
+    if not (os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")):
+        return _public_repository_archive(owner, repo)
     base = f"https://api.github.com/repos/{quote(owner)}/{quote(repo)}"
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "SC-HACK-depth-prototype"}
     if token := os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN"):
@@ -121,19 +128,19 @@ def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
     with httpx.Client(timeout=20, follow_redirects=False, headers=headers) as client:
         metadata = client.get(base)
         if _rate_limited(metadata):
-            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
+            return _public_repository_archive(owner, repo)
         metadata.raise_for_status()
         if metadata.json().get("private") is not False:
             raise ValueError("Repository must be public")
         branch = metadata.json()["default_branch"]
         commit_response = client.get(f"{base}/commits/{quote(branch)}")
         if _rate_limited(commit_response):
-            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
+            return _public_repository_archive(owner, repo)
         commit_response.raise_for_status()
         sha = commit_response.json()["sha"]
         tree_response = client.get(f"{base}/git/trees/{sha}", params={"recursive": "1"})
         if _rate_limited(tree_response):
-            raise RuntimeError("GitHub API rate limit reached; set GITHUB_TOKEN for public repository analysis")
+            return _public_repository_archive(owner, repo, sha)
         tree_response.raise_for_status()
         tree = tree_response.json()
         if tree.get("truncated"):
@@ -150,8 +157,7 @@ def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
                 break
             blob = client.get(f"{base}/git/blobs/{item['sha']}")
             if _rate_limited(blob):
-                limitations.append("GitHub API rate limit reached before all selected files were read")
-                break
+                return _public_repository_archive(owner, repo, sha)
             blob.raise_for_status()
             body = blob.json()
             if body.get("encoding") != "base64":
@@ -161,6 +167,119 @@ def public_repository_evidence(url: str) -> tuple[str, list[dict], list[str]]:
             used += len(content)
             if content.strip():
                 sources.append({"source_type": "repository", "location": f"{item['path']}@{sha}", "text": content})
+    return sha, sources, limitations
+
+
+def _public_repository_archive(owner: str, repo: str, sha: str | None = None) -> tuple[str, list[dict], list[str]]:
+    """Read a pinned public archive without spending GitHub REST API quota."""
+    if sha is None:
+        remote = f"https://github.com/{owner}/{repo}.git"
+        try:
+            refs = subprocess.run(
+                ["git", "-c", "credential.helper=", "ls-remote", "--symref", remote, "HEAD"],
+                capture_output=True, text=True, timeout=25, check=True,
+                env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_GLOBAL": os.devnull,
+                     "GIT_CONFIG_NOSYSTEM": "1"},
+            ).stdout
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise RuntimeError("Could not read the public repository HEAD") from exc
+        match = re.search(r"^([0-9a-f]{40,64})\tHEAD$", refs, re.M)
+        if not match:
+            raise ValueError("Public repository has no readable HEAD commit")
+        sha = match.group(1)
+    archive_url = f"https://codeload.github.com/{quote(owner)}/{quote(repo)}/zip/{sha}"
+    chunks, total = [], 0
+    with httpx.Client(timeout=25, follow_redirects=False, trust_env=False) as client:
+        with client.stream("GET", archive_url, headers={"User-Agent": "SC-HACK-depth-prototype"}) as response:
+            response.raise_for_status()
+            if response.status_code != 200:
+                raise ValueError("Public repository archive is unavailable")
+            for chunk in response.iter_bytes():
+                total += len(chunk)
+                if total > MAX_ARCHIVE_BYTES:
+                    return _public_repository_git(owner, repo)
+                chunks.append(chunk)
+    with ZipFile(BytesIO(b"".join(chunks))) as archive:
+        infos = archive.infolist()
+        if len(infos) > MAX_ARCHIVE_ENTRIES:
+            raise ValueError("Repository archive has too many entries to inspect")
+        candidates = []
+        for item in infos:
+            parts = item.filename.split("/", 1)
+            path = parts[1] if len(parts) == 2 else ""
+            if (not path or item.is_dir() or ".." in path.split("/") or
+                    stat.S_ISLNK(item.external_attr >> 16) or
+                    not path.lower().endswith(ALLOWED_SUFFIXES) or item.file_size > 50_000):
+                continue
+            candidates.append((path, item))
+        candidates.sort(key=lambda pair: (0 if re.search(r"readme|test|spec|architecture|design", pair[0], re.I) else 1, pair[0]))
+        limitations = [f"Only the first {MAX_REPO_FILES} eligible files were inspected"] if len(candidates) > MAX_REPO_FILES else []
+        sources, used = [], 0
+        for path, item in candidates[:MAX_REPO_FILES]:
+            if used >= MAX_SOURCE_CHARS:
+                limitations.append("Repository text budget reached")
+                break
+            content = archive.read(item).decode("utf-8", errors="replace")
+            content = content[:min(12_000, MAX_SOURCE_CHARS - used)]
+            used += len(content)
+            if content.strip():
+                sources.append({"source_type": "repository", "location": f"{path}@{sha}", "text": content})
+    return sha, sources, limitations
+
+
+def _public_repository_git(owner: str, repo: str) -> tuple[str, list[dict], list[str]]:
+    """Inspect a large public repo through a blobless clone, never checking out code."""
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_GLOBAL": os.devnull,
+           "GIT_CONFIG_NOSYSTEM": "1"}
+    remote = f"https://github.com/{owner}/{repo}.git"
+    with tempfile.TemporaryDirectory(prefix="gcdc-depth-") as directory:
+        try:
+            subprocess.run(["git", "-c", "credential.helper=", "clone", "--filter=blob:none",
+                            "--depth=1", "--no-checkout", "--quiet", remote, directory],
+                           capture_output=True, timeout=45, check=True, env=env)
+            sha = subprocess.run(["git", "-C", directory, "rev-parse", "HEAD"],
+                                 capture_output=True, text=True, timeout=10, check=True, env=env).stdout.strip()
+            tree = subprocess.run(["git", "-C", directory, "ls-tree", "-r", "-z", "HEAD"],
+                                  capture_output=True, timeout=15, check=True, env=env).stdout
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise RuntimeError("Could not inspect the public repository tree") from exc
+        if not re.fullmatch(r"[0-9a-f]{40,64}", sha):
+            raise ValueError("Public repository has no valid HEAD commit")
+        entries = tree.split(b"\0")
+        if len(entries) > MAX_ARCHIVE_ENTRIES:
+            raise ValueError("Repository tree has too many entries to inspect")
+        candidates = []
+        for entry in entries:
+            if not entry or b"\t" not in entry:
+                continue
+            metadata, path_bytes = entry.split(b"\t", 1)
+            fields = metadata.split()
+            path = path_bytes.decode("utf-8", errors="replace")
+            if (len(fields) != 3 or fields[1] != b"blob" or
+                    not path.lower().endswith(ALLOWED_SUFFIXES) or ".." in path.split("/")):
+                continue
+            candidates.append((path, fields[2].decode("ascii")))
+        candidates.sort(key=lambda pair: (0 if re.search(r"readme|test|spec|architecture|design", pair[0], re.I) else 1, pair[0]))
+        limitations = [f"Only the first {MAX_REPO_FILES} eligible files were inspected"] if len(candidates) > MAX_REPO_FILES else []
+        sources, used = [], 0
+        for path, blob in candidates[:MAX_REPO_FILES]:
+            if used >= MAX_SOURCE_CHARS:
+                limitations.append("Repository text budget reached")
+                break
+            try:
+                size = subprocess.run(["git", "-C", directory, "cat-file", "-s", blob],
+                                      capture_output=True, text=True, timeout=15, check=True, env=env)
+                if int(size.stdout.strip()) > 50_000:
+                    continue
+                file = subprocess.run(["git", "-C", directory, "cat-file", "blob", blob],
+                                      capture_output=True, timeout=10, check=True, env=env)
+            except (OSError, ValueError, subprocess.SubprocessError):
+                limitations.append(f"Could not read {path} from the public repository")
+                continue
+            content = file.stdout.decode("utf-8", errors="replace")[:min(12_000, MAX_SOURCE_CHARS - used)]
+            used += len(content)
+            if content.strip():
+                sources.append({"source_type": "repository", "location": f"{path}@{sha}", "text": content})
     return sha, sources, limitations
 
 

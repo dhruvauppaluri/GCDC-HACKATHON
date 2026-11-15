@@ -36,6 +36,11 @@ class JobStore:
         with self.lock, self.connect() as db:
             db.execute("UPDATE jobs SET status=?,result=?,error=?,updated_at=? WHERE id=?", (status, json.dumps(result) if result is not None else None, error, now(), job_id))
 
+    def retry_failed(self, job_id: str) -> bool:
+        with self.lock, self.connect() as db:
+            changed = db.execute("UPDATE jobs SET status='queued',error=NULL,updated_at=? WHERE id=? AND status='failed'", (now(), job_id))
+            return changed.rowcount == 1
+
     def update_payload(self, job_id: str, payload: dict):
         with self.lock, self.connect() as db:
             db.execute("UPDATE jobs SET payload=?,updated_at=? WHERE id=?", (json.dumps(payload), now(), job_id))
